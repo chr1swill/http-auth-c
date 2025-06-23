@@ -3,27 +3,33 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define PORT "8080"
 
 int
-main(void)
+main()
 {
   int rv;
   struct addrinfo hints, *res, *p;
 
-  memset(hints, 0, sizeof(hints));
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_flags = AI_PASSIVE;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_protocol = IPPROTO_TCP;
+  hints.ai_addr = NULL;
+  hints.ai_canonname = NULL;
+  hints.ai_next = NULL;
 
-  hints.ai_flags = ;
-  hints.ai_family = ;
-  hints.ai_socktype = ;
-  hints.ai_protocol = ;
-  hints.ai_addrlen = ;
-  hints.ai_addr = ;
-  hints.ai_canonname = ;
-  hints.ai_next = ;
+  rv = getaddrinfo(NULL, PORT, &hints, &res);
+  if (rv != 0)
+  {
+    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+    return 1;
+  }
 
-  getaddrinfo(NULL, PORT, &hints, &res);
+  (void)p;
   
   printf("hello world\n");
   return(0);
