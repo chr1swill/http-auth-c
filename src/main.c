@@ -90,12 +90,33 @@ int get_non_blocking_listener()
   return socketfd;
 }
 
+static inline
+int pollfd_add(struct *pollfd pfds, int connfd, int events)
+{
+  /* returns the idx of new member or -1 if error */
+  int j;
+
+  j = 0;
+  for (; j < PFDSMAX; ++j)
+  {
+    if (pfds[j].fd != -1) continue;
+
+    pfds[j].fd = connfd;
+    pfds[j].events = events;
+    pfds[j].revents = -1;
+
+    return(j);
+  }
+  
+  return(-1);
+}
+
 int
 main()
 {
   nfds_t nfds, i;
-  int sockfd, ready;
   struct pollfd pfds[PFDSMAX];
+  int sockfd, connfd, ready, n;
 
   memset(pfds, -1, sizeof(struct pollfd) * PFDSMAX);
 
@@ -107,7 +128,7 @@ main()
   }
 
   pfds[0].fd = sockfd;
-  pfds[0].events = POLLOUT;
+  pfds[0].events = POLLIN;
   nfds = 1;
 
   printf("server listening on port :%s\n", PORT);
@@ -117,12 +138,52 @@ main()
     if (ready == -1) err_exit("poll");
     
     i = 0;
-    while (i < PFDSMAX && ready != 0)
+    for (; i < PFDSMAX && ready != 0; ++i)
     {
-      if (pfds[i].revents == 0) {  ++i; continue; }
+      if (pfds[i].revents == 0) continue;
+      --ready;
+
+      // TODO: add the rest or the events
+      // that could be in revents (POLLHUP, etc...)
       switch ((pfds[i].revents & (POLLIN | POLLOUT | POLLERR)))
       {
-        case POLLIN: printf("POLLIN\n");
+        case POLLIN:
+          if (pfds[i].fd == sockfd)
+          {
+            printf("sockfd got event\n");
+
+            // TODO: right now I don't care about the
+            // of the connected peer,
+            // when I do this will need to change
+            connfd = accept4(sockfd, NULL, NULL, SOCK_NONBLOCK); 
+            if (connfd == -1)
+            {
+              if (errno == EAGAIN || errno == EWOULDBLOCK)
+              {
+                pfds[i].events = POLLIN;
+                pfds[i].revents = -1;
+                continue;
+              }
+              else
+              {
+                // TODO: do something better than
+                // crashing after single failed accept
+                err_exit("accept");
+              }
+            }
+            
+            if (nfds == PFDSMAX ||
+               (pollfd_add(pfds, connfd, POLLIN)) == -1)
+            {
+              fprint(stderr,
+               "cannot accept new connection, pfds array at capacity\n");
+              continue;
+            }
+          }
+          else
+          {
+            printf("client ready for events\n");
+          }
         break;
         case POLLOUT: printf("POLLOUT\n");
         break;
