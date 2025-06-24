@@ -5,12 +5,18 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <poll.h>
+#include <fcntl.h>
 
 #define PORT "8080"
 #define BACKLOG 10
+#define PFDSMAX 1024
+
+#define err_exit(msg) \
+do { perror((msg)); exit(EXIT_FAILURE); } while(1); \
 
 static inline
-int get_listener_socket()
+int get_non_blocking_listener()
 {
   int rv, socketfd;
   struct addrinfo hints, *result, *rp;
@@ -74,21 +80,61 @@ int get_listener_socket()
     return(-1);
   } 
 
+  if ((fcntl(socketfd, F_SETFL, O_NONBLOCK)) == -1)
+  {
+    perror("fcntl: O_NONBLOCK");
+    close(socketfd);
+    return(-1);
+  }
+
   return socketfd;
 }
 
 int
 main()
 {
-  int sockfd;
+  nfds_t nfds, i;
+  int sockfd, ready;
+  struct pollfd pfds[PFDSMAX];
 
-  sockfd = get_listener_socket();
+  memset(pfds, -1, sizeof(struct pollfd) * PFDSMAX);
+
+  sockfd = get_non_blocking_listener();
   if (sockfd == -1)
   {
     fprintf(stderr, "get_listener_socket: failed to get socket\n");
     return(1);
   }
-  
-  printf("hello my socket %d\n", sockfd);
+
+  pfds[0].fd = sockfd;
+  pfds[0].events = POLLOUT;
+  nfds = 1;
+
+  printf("server listening on port :%s\n", PORT);
+  for (;;)
+  {
+    ready = poll(pfds, nfds, -1);
+    if (ready == -1) err_exit("poll");
+    
+    i = 0;
+    while (i < PFDSMAX && ready != 0)
+    {
+      if (pfds[i].revents == 0) {  ++i; continue; }
+      switch ((pfds[i].revents & (POLLIN | POLLOUT | POLLERR)))
+      {
+        case POLLIN: printf("POLLIN\n");
+        break;
+        case POLLOUT: printf("POLLOUT\n");
+        break;
+        case POLLERR: printf("POLLERR\n"); 
+        break;
+        default: printf("that is not how that works brother\n"); 
+      }
+      return(0); 
+    }
+    
+  }
+
+  close(sockfd);
   return(0);
 }
