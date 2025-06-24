@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #define PORT "8080"
 #define BACKLOG 10
@@ -91,7 +92,7 @@ int get_non_blocking_listener()
 }
 
 static inline
-int pollfd_add(struct *pollfd pfds, int connfd, int events)
+int pollfd_add(struct pollfd *pfds, int connfd, int events)
 {
   /* returns the idx of new member or -1 if error */
   int j;
@@ -115,8 +116,8 @@ int
 main()
 {
   nfds_t nfds, i;
+  int sockfd, connfd, ready;
   struct pollfd pfds[PFDSMAX];
-  int sockfd, connfd, ready, n;
 
   memset(pfds, -1, sizeof(struct pollfd) * PFDSMAX);
 
@@ -155,7 +156,7 @@ main()
             // TODO: right now I don't care about the
             // of the connected peer,
             // when I do this will need to change
-            connfd = accept4(sockfd, NULL, NULL, SOCK_NONBLOCK); 
+            connfd = accept(sockfd, NULL, NULL); 
             if (connfd == -1)
             {
               if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -171,11 +172,16 @@ main()
                 err_exit("accept");
               }
             }
+
+            if ((fcntl(connfd, F_SETFL, O_NONBLOCK)) == -1)
+            {
+              err_exit("fcntl: O_NONBLOCK");
+            }
             
             if (nfds == PFDSMAX ||
                (pollfd_add(pfds, connfd, POLLIN)) == -1)
             {
-              fprint(stderr,
+              fprintf(stderr,
                "cannot accept new connection, pfds array at capacity\n");
               continue;
             }
