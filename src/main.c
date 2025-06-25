@@ -92,10 +92,12 @@ int get_non_blocking_listener()
 }
 
 static inline
-int pollfd_add(struct pollfd *pfds, int connfd, int events)
+int pollfd_add(nfds_t *nfds, struct pollfd *pfds, int connfd, int events)
 {
   /* returns the idx of new member or -1 if error */
   int j;
+
+  if ((*nfds) >= PFDSMAX) return(-1);
 
   j = 0;
   for (; j < PFDSMAX; ++j)
@@ -105,6 +107,8 @@ int pollfd_add(struct pollfd *pfds, int connfd, int events)
     pfds[j].fd = connfd;
     pfds[j].events = events;
     pfds[j].revents = -1;
+    
+    ++(*nfds);
 
     return(j);
   }
@@ -178,8 +182,7 @@ main()
               err_exit("fcntl: O_NONBLOCK");
             }
             
-            if (nfds == PFDSMAX ||
-               (pollfd_add(pfds, connfd, POLLIN)) == -1)
+            if ((pollfd_add(&nfds, pfds, connfd, POLLIN)) == -1)
             {
               fprintf(stderr,
                "cannot accept new connection, pfds array at capacity\n");
@@ -188,7 +191,9 @@ main()
           }
           else
           {
-            printf("client ready for events\n");
+            printf("conn socket fired POLLIN event\n");
+
+            return(0); 
           }
         break;
         case POLLOUT: printf("POLLOUT\n");
@@ -197,7 +202,7 @@ main()
         break;
         default: printf("that is not how that works brother\n"); 
       }
-      return(0); 
+      // return(0); 
     }
     
   }
