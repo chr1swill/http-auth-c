@@ -116,8 +116,7 @@ int pollfd_add(nfds_t *nfds, struct pollfd *pfds, int connfd, int events)
   return(-1);
 }
 
-int
-main()
+int main()
 {
   nfds_t nfds, i;
   int sockfd, connfd, ready;
