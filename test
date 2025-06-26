@@ -1,0 +1,246 @@
+	.file	"test.c"
+# GNU C17 (Ubuntu 13.3.0-6ubuntu2~24.04) version 13.3.0 (x86_64-linux-gnu)
+#	compiled by GNU C version 13.3.0, GMP version 6.3.0, MPFR version 4.2.1, MPC version 1.3.1, isl version isl-0.26-GMP
+
+# GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+# options passed: -mtune=generic -march=x86-64 -fasynchronous-unwind-tables -fstack-protector-strong -fstack-clash-protection -fcf-protection
+	.text
+	.section	.rodata
+.LC0:
+	.string	"connfd=%d\n"
+.LC1:
+	.string	"malloc"
+	.text
+	.globl	get_request_buffer
+	.type	get_request_buffer, @function
+get_request_buffer:
+.LFB6:
+	.cfi_startproc
+	endbr64	
+	pushq	%rbp	#
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
+	movq	%rsp, %rbp	#,
+	.cfi_def_cfa_register 6
+	pushq	%rbx	#
+	subq	$24, %rsp	#,
+	.cfi_offset 3, -24
+	movq	%rdi, -24(%rbp)	# rbufs, rbufs
+	movl	%esi, -28(%rbp)	# connfd, connfd
+# test.c:14:   printf("connfd=%d\n", connfd);
+	movl	-28(%rbp), %eax	# connfd, tmp107
+	movl	%eax, %esi	# tmp107,
+	leaq	.LC0(%rip), %rax	#, tmp108
+	movq	%rax, %rdi	# tmp108,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# test.c:16:   if (rbufs[RBUFS_HASH(connfd)] != NULL) return rbufs[RBUFS_HASH(connfd)];
+	movl	-28(%rbp), %eax	# connfd, tmp109
+	cltq
+	salq	$3, %rax	#, _2
+	leaq	-24(%rax), %rdx	#, _3
+	movq	-24(%rbp), %rax	# rbufs, tmp110
+	addq	%rdx, %rax	# _3, _4
+	movq	(%rax), %rax	# *_4, _5
+# test.c:16:   if (rbufs[RBUFS_HASH(connfd)] != NULL) return rbufs[RBUFS_HASH(connfd)];
+	testq	%rax, %rax	# _5
+	je	.L2	#,
+# test.c:16:   if (rbufs[RBUFS_HASH(connfd)] != NULL) return rbufs[RBUFS_HASH(connfd)];
+	movl	-28(%rbp), %eax	# connfd, tmp111
+	cltq
+	salq	$3, %rax	#, _7
+	leaq	-24(%rax), %rdx	#, _8
+	movq	-24(%rbp), %rax	# rbufs, tmp112
+	addq	%rdx, %rax	# _8, _9
+	movq	(%rax), %rax	# *_9, _24
+# test.c:16:   if (rbufs[RBUFS_HASH(connfd)] != NULL) return rbufs[RBUFS_HASH(connfd)];
+	jmp	.L3	#
+.L2:
+# test.c:18:   rbufs[RBUFS_HASH(connfd)] = malloc(sizeof(char) * REQUESTBUFFERMAX);
+	movl	-28(%rbp), %eax	# connfd, tmp113
+	cltq
+	salq	$3, %rax	#, _11
+	leaq	-24(%rax), %rdx	#, _12
+	movq	-24(%rbp), %rax	# rbufs, tmp114
+	leaq	(%rdx,%rax), %rbx	#, _13
+# test.c:18:   rbufs[RBUFS_HASH(connfd)] = malloc(sizeof(char) * REQUESTBUFFERMAX);
+	movl	$1024, %edi	#,
+	call	malloc@PLT	#
+# test.c:18:   rbufs[RBUFS_HASH(connfd)] = malloc(sizeof(char) * REQUESTBUFFERMAX);
+	movq	%rax, (%rbx)	# _14, *_13
+# test.c:19:   if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
+	movl	-28(%rbp), %eax	# connfd, tmp116
+	cltq
+	salq	$3, %rax	#, _16
+	leaq	-24(%rax), %rdx	#, _17
+	movq	-24(%rbp), %rax	# rbufs, tmp117
+	addq	%rdx, %rax	# _17, _18
+	movq	(%rax), %rax	# *_18, _19
+# test.c:19:   if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
+	testq	%rax, %rax	# _19
+	jne	.L4	#,
+# test.c:19:   if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
+	leaq	.LC1(%rip), %rax	#, tmp118
+	movq	%rax, %rdi	# tmp118,
+	call	perror@PLT	#
+	movl	$1, %edi	#,
+	call	exit@PLT	#
+.L4:
+# test.c:21:   return rbufs[RBUFS_HASH(connfd)];
+	movl	-28(%rbp), %eax	# connfd, tmp119
+	cltq
+	salq	$3, %rax	#, _21
+	leaq	-24(%rax), %rdx	#, _22
+	movq	-24(%rbp), %rax	# rbufs, tmp120
+	addq	%rdx, %rax	# _22, _23
+	movq	(%rax), %rax	# *_23, _24
+.L3:
+# test.c:22: }
+	movq	-8(%rbp), %rbx	#,
+	leave	
+	.cfi_def_cfa 7, 8
+	ret	
+	.cfi_endproc
+.LFE6:
+	.size	get_request_buffer, .-get_request_buffer
+	.section	.rodata
+.LC2:
+	.string	"%ld\n"
+	.align 8
+.LC3:
+	.string	"this is a string in the array that i just stack allocated bc i am cool"
+	.text
+	.globl	main
+	.type	main, @function
+main:
+.LFB7:
+	.cfi_startproc
+	endbr64	
+	pushq	%rbp	#
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
+	movq	%rsp, %rbp	#,
+	.cfi_def_cfa_register 6
+	pushq	%rbx	#
+	subq	$4096, %rsp	#,
+	orq	$0, (%rsp)	#,
+	subq	$4096, %rsp	#,
+	orq	$0, (%rsp)	#,
+	subq	$56, %rsp	#,
+	.cfi_offset 3, -24
+# test.c:25: {
+	movq	%fs:40, %rax	# MEM[(<address-space-1> long unsigned int *)40B], tmp116
+	movq	%rax, -24(%rbp)	# tmp116, D.4551
+	xorl	%eax, %eax	# tmp116
+# test.c:28:   char *rbufs[REQUESTBUFFERMAX] = {0};
+	leaq	-8224(%rbp), %rdx	#, tmp94
+	movl	$0, %eax	#, tmp95
+	movl	$1024, %ecx	#, tmp96
+	movq	%rdx, %rdi	# tmp94, tmp94
+	rep stosq
+# test.c:30:   connfd = 4;
+	movl	$4, -8244(%rbp)	#, connfd
+# test.c:32:   printf("%ld\n", sizeof(rbufs));
+	movl	$8192, %esi	#,
+	leaq	.LC2(%rip), %rax	#, tmp97
+	movq	%rax, %rdi	# tmp97,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# test.c:34:   str = "this is a string in the array that i just stack allocated bc i am cool";
+	leaq	.LC3(%rip), %rax	#, tmp98
+	movq	%rax, -8240(%rbp)	# tmp98, str
+# test.c:36:   rbufs[RBUFS_HASH(connfd)] = (char *)malloc(sizeof(char) * strlen(str));
+	movq	-8240(%rbp), %rax	# str, tmp99
+	movq	%rax, %rdi	# tmp99,
+	call	strlen@PLT	#
+# test.c:36:   rbufs[RBUFS_HASH(connfd)] = (char *)malloc(sizeof(char) * strlen(str));
+	movl	-8244(%rbp), %edx	# connfd, tmp100
+	leal	-3(%rdx), %ebx	#, _2
+# test.c:36:   rbufs[RBUFS_HASH(connfd)] = (char *)malloc(sizeof(char) * strlen(str));
+	movq	%rax, %rdi	# _1,
+	call	malloc@PLT	#
+	movq	%rax, %rdx	# tmp101, _3
+# test.c:36:   rbufs[RBUFS_HASH(connfd)] = (char *)malloc(sizeof(char) * strlen(str));
+	movslq	%ebx, %rax	# _2, tmp102
+	movq	%rdx, -8224(%rbp,%rax,8)	# _3, rbufs[_2]
+# test.c:37:   if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
+	movl	-8244(%rbp), %eax	# connfd, tmp103
+	subl	$3, %eax	#, _4
+# test.c:37:   if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
+	cltq
+	movq	-8224(%rbp,%rax,8), %rax	# rbufs[_4], _5
+# test.c:37:   if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
+	testq	%rax, %rax	# _5
+	jne	.L6	#,
+# test.c:37:   if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
+	leaq	.LC1(%rip), %rax	#, tmp105
+	movq	%rax, %rdi	# tmp105,
+	call	perror@PLT	#
+	movl	$1, %edi	#,
+	call	exit@PLT	#
+.L6:
+# test.c:39:   strncpy(rbufs[RBUFS_HASH(connfd)], str, strlen(str));
+	movq	-8240(%rbp), %rax	# str, tmp106
+	movq	%rax, %rdi	# tmp106,
+	call	strlen@PLT	#
+	movq	%rax, %rdx	#, _6
+# test.c:39:   strncpy(rbufs[RBUFS_HASH(connfd)], str, strlen(str));
+	movl	-8244(%rbp), %eax	# connfd, tmp107
+	subl	$3, %eax	#, _7
+# test.c:39:   strncpy(rbufs[RBUFS_HASH(connfd)], str, strlen(str));
+	cltq
+	movq	-8224(%rbp,%rax,8), %rax	# rbufs[_7], _8
+	movq	-8240(%rbp), %rcx	# str, tmp109
+	movq	%rcx, %rsi	# tmp109,
+	movq	%rax, %rdi	# _8,
+	call	strncpy@PLT	#
+# test.c:41:   rbuf = rbufs[RBUFS_HASH(connfd)];
+	movl	-8244(%rbp), %eax	# connfd, tmp110
+	subl	$3, %eax	#, _9
+# test.c:41:   rbuf = rbufs[RBUFS_HASH(connfd)];
+	cltq
+	movq	-8224(%rbp,%rax,8), %rax	# rbufs[_9], tmp112
+	movq	%rax, -8232(%rbp)	# tmp112, rbuf
+# test.c:42:   write(STDOUT_FILENO, rbuf, strlen(str));
+	movq	-8240(%rbp), %rax	# str, tmp113
+	movq	%rax, %rdi	# tmp113,
+	call	strlen@PLT	#
+	movq	%rax, %rdx	#, _10
+# test.c:42:   write(STDOUT_FILENO, rbuf, strlen(str));
+	movq	-8232(%rbp), %rax	# rbuf, tmp114
+	movq	%rax, %rsi	# tmp114,
+	movl	$1, %edi	#,
+	call	write@PLT	#
+# test.c:43:   return 0;
+	movl	$0, %eax	#, _21
+# test.c:44: }
+	movq	-24(%rbp), %rdx	# D.4551, tmp117
+	subq	%fs:40, %rdx	# MEM[(<address-space-1> long unsigned int *)40B], tmp117
+	je	.L8	#,
+	call	__stack_chk_fail@PLT	#
+.L8:
+	movq	-8(%rbp), %rbx	#,
+	leave	
+	.cfi_def_cfa 7, 8
+	ret	
+	.cfi_endproc
+.LFE7:
+	.size	main, .-main
+	.ident	"GCC: (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+	.section	.note.GNU-stack,"",@progbits
+	.section	.note.gnu.property,"a"
+	.align 8
+	.long	1f - 0f
+	.long	4f - 1f
+	.long	5
+0:
+	.string	"GNU"
+1:
+	.align 8
+	.long	0xc0000002
+	.long	3f - 2f
+2:
+	.long	0x3
+3:
+	.align 8
+4:
