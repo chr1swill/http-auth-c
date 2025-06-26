@@ -134,19 +134,28 @@ void clean_request_buffer(char *rbufs[REQUESTBUFFERMAX], int connfd)
   memset(&rbufs[RBUFS_HASH(connfd)], 0, sizeof(char) * REQUESTBUFFERMAX);
 }
 
-char *get_request_buffer(char *rbufs[REQUESTBUFFERMAX], int connfd)
+char *get_request_buffer(char *rbufs[PFDSMAX], int connfd)
 {
   printf("connfd=%d\n", connfd);
   assert(connfd > -1);
   assert(rbufs != NULL);
 
-  if (rbufs[RBUFS_HASH(connfd)] != NULL) goto clean_return;
+  printf("RBUFS_HASH(connfd)=%d\n", RBUFS_HASH(connfd));
+  if (rbufs[RBUFS_HASH(connfd)] != NULL) goto done;
   
   rbufs[RBUFS_HASH(connfd)] = malloc(sizeof(char) * REQUESTBUFFERMAX);
   if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
 
-clean_return:
+  assert(rbufs[RBUFS_HASH(connfd)] != NULL);
   clean_request_buffer(rbufs, connfd);
+  printf("%p\n", rbufs[RBUFS_HASH(connfd)]);
+  printf("%p\n", rbufs[0]);
+  printf("%p\n", (*rbufs));
+
+  exit(0);
+
+
+done:
   return rbufs[RBUFS_HASH(connfd)];
 }
 
@@ -236,7 +245,16 @@ int main()
           {
             printf("conn socket fired POLLIN event\n");
 
-            request_buffer = get_request_buffer(rbufs, pfds[i].fd);
+            // request_buffer = get_request_buffer(rbufs, pfds[i].fd);
+            request_buffer = rbufs[RBUFS_HASH(connfd)];
+            if (request_buffer == NULL)
+            {
+              rbufs[RBUFS_HASH(connfd)] = malloc(REQUESTBUFFERMAX);
+              if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
+
+              request_buffer = rbufs[RBUFS_HASH(connfd)];
+            }
+
             n = read(pfds[i].fd, request_buffer, REQUESTBUFFERMAX);
             if (n == -1)
             {
