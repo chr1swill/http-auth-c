@@ -140,13 +140,13 @@ char *get_request_buffer(char *rbufs[REQUESTBUFFERMAX], int connfd)
   assert(connfd > -1);
   assert(rbufs != NULL);
 
-  if (rbufs[RBUFS_HASH(connfd)] != NULL) return rbufs[RBUFS_HASH(connfd)];
+  if (rbufs[RBUFS_HASH(connfd)] != NULL) goto clean_return;
   
   rbufs[RBUFS_HASH(connfd)] = malloc(sizeof(char) * REQUESTBUFFERMAX);
   if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
 
+clean_return:
   clean_request_buffer(rbufs, connfd);
-
   return rbufs[RBUFS_HASH(connfd)];
 }
 
