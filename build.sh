@@ -4,7 +4,7 @@ set -xe
 
 SRC=src
 BIN=bin
-CLAGS="-Wall -Wextra -pedantic -ggdb"
+CFLAGS="-Wall -Wextra -pedantic -ggdb"
 
 if [ ! -d "$SRC" ];
 then 
@@ -18,6 +18,9 @@ fi
 
 mkdir -p "$BIN"
 
-gcc -o ${BIN}/main ${SRC}/main.c ${CLAGS}
+gcc -o ${BIN}/main ${SRC}/main.c ${CFLAGS}
+
+CFLAGS="-fverbose-asm -S"
+gcc -o ${BIN}/main.s ${SRC}/main.c ${CFLAGS}
 
 exit 0
