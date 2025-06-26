@@ -8,10 +8,12 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <assert.h>
 
 #define PORT "8080"
 #define BACKLOG 10
 #define PFDSMAX 1024
+#define REQUESTBUFFERMAX 1024
 
 #define err_exit(msg) \
 do { perror((msg)); exit(EXIT_FAILURE); } while(1); \
@@ -116,13 +118,55 @@ int pollfd_add(nfds_t *nfds, struct pollfd *pfds, int connfd, int events)
   return(-1);
 }
 
+// since this for a server we know that we will never need a 
+// request buffer for fd 0, 1, 2 (STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO)
+// so why not make a function that will translate the connfd to make
+// the first connfd (#3) fill spot number 0 or at least 1 
+// JUST A THOUGHT cause if we really have PFDSMAX fds in our array we will
+// run out of space by 3 which is not ideal 
+#define RBUFS_HASH(connfd) ((connfd) - 3)
+
+static inline
+void clean_request_buffer(char *rbufs[REQUESTBUFFERMAX], int connfd)
+{
+  assert(connfd > -1);
+  assert(rbufs != NULL);
+  memset(&rbufs[RBUFS_HASH(connfd)], 0, sizeof(char) * REQUESTBUFFERMAX);
+}
+
+char *get_request_buffer(char *rbufs[REQUESTBUFFERMAX], int connfd)
+{
+  printf("connfd=%d\n", connfd);
+  assert(connfd > -1);
+  assert(rbufs != NULL);
+
+  if (rbufs[RBUFS_HASH(connfd)] != NULL) return rbufs[RBUFS_HASH(connfd)];
+  
+  rbufs[RBUFS_HASH(connfd)] = malloc(sizeof(char) * REQUESTBUFFERMAX);
+  if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
+
+  clean_request_buffer(rbufs, connfd);
+
+  return rbufs[RBUFS_HASH(connfd)];
+}
+
+void free_request_buffer(char *rbufs[REQUESTBUFFERMAX], int connfd)
+{
+  assert(connfd > -1);
+  assert(rbufs != NULL);
+  assert(0 == 1 && "not impletemented");
+}
+
 int main()
 {
+  ssize_t n;
   nfds_t nfds, i;
   int sockfd, connfd, ready;
   struct pollfd pfds[PFDSMAX];
+  char *request_buffer, *rbufs[PFDSMAX];
 
   memset(pfds, -1, sizeof(struct pollfd) * PFDSMAX);
+  memset(rbufs, 0, sizeof(char *) * PFDSMAX);
 
   sockfd = get_non_blocking_listener();
   if (sockfd == -1)
@@ -192,7 +236,16 @@ int main()
           {
             printf("conn socket fired POLLIN event\n");
 
-            return(0); 
+            request_buffer = get_request_buffer(rbufs, pfds[i].fd);
+            n = read(pfds[i].fd, request_buffer, REQUESTBUFFERMAX);
+            if (n == -1)
+            {
+              if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
+              err_exit("read -> connfd");
+            }
+            request_buffer[n] = '\0';
+            printf("request: %s\n", request_buffer);
+            return(0);
           }
         break;
         case POLLOUT: printf("POLLOUT\n");
@@ -202,7 +255,6 @@ int main()
         default: printf("that is not how that works brother\n"); 
       }
     }
-    
   }
 
   close(sockfd);
