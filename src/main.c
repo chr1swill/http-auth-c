@@ -14,6 +14,13 @@
 #define BACKLOG 10
 #define PFDSMAX 1024
 #define REQUESTBUFFERMAX 1024
+// since this for a server we know that we will never need a
+// request buffer for fd 0, 1, 2 (STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO)
+// so why not make a function that will translate the connfd to make
+// the first connfd (#3) fill spot number 0 or at least 1
+// JUST A THOUGHT cause if we really have PFDSMAX fds in our array we will
+// run out of space by 3 which is not ideal
+#define RBUFS_HASH(connfd) ((connfd) - 3)
 
 #define err_exit(msg) \
 do { perror((msg)); exit(EXIT_FAILURE); } while(1); \
@@ -118,54 +125,6 @@ int pollfd_add(nfds_t *nfds, struct pollfd *pfds, int connfd, int events)
   return(-1);
 }
 
-// since this for a server we know that we will never need a 
-// request buffer for fd 0, 1, 2 (STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO)
-// so why not make a function that will translate the connfd to make
-// the first connfd (#3) fill spot number 0 or at least 1 
-// JUST A THOUGHT cause if we really have PFDSMAX fds in our array we will
-// run out of space by 3 which is not ideal 
-#define RBUFS_HASH(connfd) ((connfd) - 3)
-
-static inline
-void clean_request_buffer(char *rbufs[REQUESTBUFFERMAX], int connfd)
-{
-  assert(connfd > -1);
-  assert(rbufs != NULL);
-  memset(&rbufs[RBUFS_HASH(connfd)], 0, sizeof(char) * REQUESTBUFFERMAX);
-}
-
-char *get_request_buffer(char *rbufs[PFDSMAX], int connfd)
-{
-  printf("connfd=%d\n", connfd);
-  assert(connfd > -1);
-  assert(rbufs != NULL);
-
-  printf("RBUFS_HASH(connfd)=%d\n", RBUFS_HASH(connfd));
-  if (rbufs[RBUFS_HASH(connfd)] != NULL) goto done;
-  
-  rbufs[RBUFS_HASH(connfd)] = malloc(sizeof(char) * REQUESTBUFFERMAX);
-  if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
-
-  assert(rbufs[RBUFS_HASH(connfd)] != NULL);
-  clean_request_buffer(rbufs, connfd);
-  printf("%p\n", rbufs[RBUFS_HASH(connfd)]);
-  printf("%p\n", rbufs[0]);
-  printf("%p\n", (*rbufs));
-
-  exit(0);
-
-
-done:
-  return rbufs[RBUFS_HASH(connfd)];
-}
-
-void free_request_buffer(char *rbufs[REQUESTBUFFERMAX], int connfd)
-{
-  assert(connfd > -1);
-  assert(rbufs != NULL);
-  assert(0 == 1 && "not impletemented");
-}
-
 int main()
 {
   ssize_t n;
@@ -245,15 +204,14 @@ int main()
           {
             printf("conn socket fired POLLIN event\n");
 
-            // request_buffer = get_request_buffer(rbufs, pfds[i].fd);
             request_buffer = rbufs[RBUFS_HASH(connfd)];
             if (request_buffer == NULL)
             {
               rbufs[RBUFS_HASH(connfd)] = malloc(REQUESTBUFFERMAX);
               if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
-
               request_buffer = rbufs[RBUFS_HASH(connfd)];
             }
+            memset(request_buffer, 0, REQUESTBUFFERMAX);
 
             n = read(pfds[i].fd, request_buffer, REQUESTBUFFERMAX);
             if (n == -1)
