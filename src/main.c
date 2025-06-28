@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
+#include "picohttpparser.h"
 
 #define PORT "8080"
 #define BACKLOG 10
@@ -20,10 +21,11 @@
 // the first connfd (#3) fill spot number 0 or at least 1
 // JUST A THOUGHT cause if we really have PFDSMAX fds in our array we will
 // run out of space by 3 which is not ideal
-#define RBUFS_HASH(connfd) ((connfd) - 3)
+#define RBUFS_HASH(connfd, sockfd) ((connfd) - (sockfd))
+#define client_idx() RBUFS_HASH(connfd, sockfd)
 
 #define err_exit(msg) \
-do { perror((msg)); exit(EXIT_FAILURE); } while(1); \
+do { perror((msg)); exit(EXIT_FAILURE); } while(0); \
 
 static inline
 int get_non_blocking_listener()
@@ -204,12 +206,12 @@ int main()
           {
             printf("conn socket fired POLLIN event\n");
 
-            request_buffer = rbufs[RBUFS_HASH(connfd)];
+            request_buffer = rbufs[client_idx()];
             if (request_buffer == NULL)
             {
-              rbufs[RBUFS_HASH(connfd)] = malloc(REQUESTBUFFERMAX);
-              if (rbufs[RBUFS_HASH(connfd)] == NULL) err_exit("malloc");
-              request_buffer = rbufs[RBUFS_HASH(connfd)];
+              rbufs[client_idx()] = malloc(REQUESTBUFFERMAX);
+              if (rbufs[client_idx()] == NULL) err_exit("malloc");
+              request_buffer = rbufs[client_idx()];
             }
             memset(request_buffer, 0, REQUESTBUFFERMAX);
 
@@ -217,9 +219,18 @@ int main()
             if (n == -1)
             {
               if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
-              err_exit("read -> connfd");
+              err_exit("read ==>> connfd");
             }
             request_buffer[n] = '\0';
+
+            /* returns number of bytes consumed if successful, -2 if request is partial,
+             * -1 if failed */
+            int phr_parse_request(const char *buf, size_t len,
+                const char **method, size_t *method_len,
+                const char **path, size_t *path_len,
+                int *minor_version,
+                struct phr_header *headers, size_t *num_headers, size_t last_len);
+
             printf("request: %s\n", request_buffer);
             return(0);
           }
