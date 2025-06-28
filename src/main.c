@@ -27,17 +27,18 @@
 #define err_exit(msg) \
 do { perror((msg)); exit(EXIT_FAILURE); } while(0); \
 
-static const char *php_buf[PFDSMAX][REQUESTBUFFERMAX] = {0};
+static const char php_buf[PFDSMAX][REQUESTBUFFERMAX] = {0};
 static size_t php_buflen[PFDSMAX] = {0};
-static const char **php_method[PFDSMAX] = {0};
-static size_t *php_methodlen[PFDSMAX] = {0};
-static const char **php_path[PFDSMAX] = {0};
-static size_t *php_pathlen[PFDSMAX] = {0};
-static int *php_minor_version[PFDSMAX] = {0};
+static const char *php_method[PFDSMAX] = {0};
+static size_t php_methodlen[PFDSMAX] = {0};
+static const char *php_path[PFDSMAX] = {0};
+static size_t php_pathlen[PFDSMAX] = {0};
 
 #define PHP_NUM_HEADERS  8
-static struct phr_header *php_headers[PFDSMAX][PHP_NUM_HEADERS] = {0};
-static size_t *php_num_headers[PFDSMAX] = {0};
+static size_t php_num_headers[PFDSMAX] = {PHP_NUM_HEADERS};
+static struct phr_header php_headers[PFDSMAX][PHP_NUM_HEADERS] = {0};
+
+static int php_minor_version[PFDSMAX] = {0};
 static size_t php_return[PFDSMAX] = {0};
 
 static inline
@@ -238,46 +239,45 @@ int main()
 
             /* returns number of bytes consumed if successful, -2 if request is partial,
              * -1 if failed */
-
-            *php_num_headers[client_idx()] = PHP_NUM_HEADERS;
-
-            switch (phr_parse_request((const char *)php_buf[client_idx()], php_buflen[client_idx()],
-                php_method[client_idx()], php_methodlen[client_idx()],
-                php_path[client_idx()], php_pathlen[client_idx()],
-                php_minor_version[client_idx()],
-                *php_headers[client_idx()], php_num_headers[client_idx()],
-                php_return[client_idx()]))
+            switch (
+                phr_parse_request((const char *)&php_buf[client_idx()], php_buflen[client_idx()],
+                &php_method[client_idx()], &php_methodlen[client_idx()],
+                &php_path[client_idx()], &php_pathlen[client_idx()],
+                &php_minor_version[client_idx()],
+                php_headers[client_idx()], &php_num_headers[client_idx()],
+                php_return[client_idx()])
+                )
             {
               case -1: puts("phr_parse_request: failed"); exit(EXIT_FAILURE); break;
               case -2: puts("phr_parse_request: partial"); exit(EXIT_FAILURE); break;
               default: puts("succcess\n\n");
             }
+            puts("here3");
 
             puts("request: ");
             write(STDOUT_FILENO, php_buf[client_idx()], php_buflen[client_idx()]);
             putchar('\n');
 
             puts("method: ");
-            write(STDOUT_FILENO, php_method[client_idx()], *php_methodlen[client_idx()]);
+            write(STDOUT_FILENO, php_method[client_idx()], php_methodlen[client_idx()]);
             putchar('\n');
 
             puts("path: ");
-            write(STDOUT_FILENO, php_path[client_idx()], *php_pathlen[client_idx()]);
+            write(STDOUT_FILENO, php_path[client_idx()], php_pathlen[client_idx()]);
             putchar('\n');
 
             puts("version: HTTP/1.");
-            write(STDOUT_FILENO, php_minor_version[client_idx()], sizeof php_minor_version[client_idx()]);
-            putchar('\n');
+            printf("version: HTTP/1.%d\n", php_minor_version[client_idx()]);
 
             puts("headers:\n");
-            for (size_t it = 0; it < *php_num_headers[client_idx()]; ++it)
+            for (size_t it = 0; it < php_num_headers[client_idx()]; ++it)
             {
               puts("\theader name: ");
-              write(STDOUT_FILENO, php_headers[client_idx()][it]->name, php_headers[client_idx()][it]->name_len);
+              write(STDOUT_FILENO, php_headers[client_idx()][it].name, php_headers[client_idx()][it].name_len);
               putchar('\n');
 
               puts("\theader value: ");
-              write(STDOUT_FILENO, php_headers[client_idx()][it]->value, php_headers[client_idx()][it]->value_len);
+              write(STDOUT_FILENO, php_headers[client_idx()][it].value, php_headers[client_idx()][it].value_len);
               putchar('\n');
             }
 
