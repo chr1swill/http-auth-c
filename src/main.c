@@ -21,7 +21,7 @@
 // the first connfd (#3) fill spot number 0 or at least 1
 // JUST A THOUGHT cause if we really have PFDSMAX fds in our array we will
 // run out of space by 3 which is not ideal
-#define PHP_HASHIDX(connfd, sockfd) ((connfd) - (sockfd))
+#define PHP_HASHIDX(connfd, sockfd) (((connfd) - (sockfd)) - 1)
 #define client_idx() PHP_HASHIDX(connfd, sockfd)
 
 #define err_exit(msg) \
