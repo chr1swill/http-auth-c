@@ -27,7 +27,7 @@
 #define err_exit(msg) \
 do { perror((msg)); exit(EXIT_FAILURE); } while(0); \
 
-static const char php_buf[PFDSMAX][REQUESTBUFFERMAX] = {0};
+static char php_buf[PFDSMAX][REQUESTBUFFERMAX] = {0};
 static size_t php_buflen[PFDSMAX] = {0};
 static const char *php_method[PFDSMAX] = {0};
 static size_t php_methodlen[PFDSMAX] = {0};
@@ -39,7 +39,7 @@ static size_t php_num_headers[PFDSMAX] = {PHP_NUM_HEADERS};
 static struct phr_header php_headers[PFDSMAX][PHP_NUM_HEADERS] = {0};
 
 static int php_minor_version[PFDSMAX] = {0};
-static size_t php_return[PFDSMAX] = {0};
+static size_t php_prevbuflen[PFDSMAX] = {0};
 
 static inline
 int get_non_blocking_listener()
@@ -147,10 +147,8 @@ int main()
   nfds_t nfds, i;
   int sockfd, connfd, ready;
   struct pollfd pfds[PFDSMAX];
-  char *request_buffer, *rbufs[PFDSMAX];
 
   memset(pfds, -1, sizeof(struct pollfd) * PFDSMAX);
-  memset(rbufs, 0, sizeof(char *) * PFDSMAX);
 
   sockfd = get_non_blocking_listener();
   if (sockfd == -1)
@@ -220,40 +218,51 @@ int main()
           {
             printf("conn socket fired POLLIN event\n");
 
-            request_buffer = rbufs[client_idx()];
-            if (request_buffer == NULL)
-            {
-              rbufs[client_idx()] = malloc(REQUESTBUFFERMAX);
-              if (rbufs[client_idx()] == NULL) err_exit("malloc");
-              request_buffer = rbufs[client_idx()];
-            }
-            memset(request_buffer, 0, REQUESTBUFFERMAX);
+            while((n = read(pfds[i].fd,
+                    php_buf[client_idx()] + php_buflen[client_idx()],
+                    sizeof(php_buf[client_idx()]) - php_buflen[client_idx()])
+                  ) == -1 && errno == EINTR);
 
-            n = read(pfds[i].fd, request_buffer, REQUESTBUFFERMAX);
             if (n == -1)
             {
-              if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
-              err_exit("read ==>> connfd");
+              if (errno == EAGAIN || errno == EWOULDBLOCK)
+              {
+                pfds[i].events = POLLIN;
+                pfds[i].revents = -1;
+                continue;
+              } else {
+                err_exit("read ==>> connfd");
+              }
             }
-            request_buffer[n] = '\0';
+
+            php_prevbuflen[client_idx()] = php_buflen[client_idx()];
+            php_buflen[client_idx()] += n;
 
             /* returns number of bytes consumed if successful, -2 if request is partial,
              * -1 if failed */
-            switch (
-                phr_parse_request((const char *)&php_buf[client_idx()], php_buflen[client_idx()],
+            n = phr_parse_request(php_buf[client_idx()], php_buflen[client_idx()],
                 &php_method[client_idx()], &php_methodlen[client_idx()],
                 &php_path[client_idx()], &php_pathlen[client_idx()],
                 &php_minor_version[client_idx()],
                 php_headers[client_idx()], &php_num_headers[client_idx()],
-                php_return[client_idx()])
-                )
-            {
-              case -1: puts("phr_parse_request: failed"); exit(EXIT_FAILURE); break;
-              case -2: puts("phr_parse_request: partial"); exit(EXIT_FAILURE); break;
-              default: puts("succcess\n\n");
-            }
-            puts("here3");
+                php_prevbuflen[client_idx()]);
 
+            if (n > 0) {
+              puts("php_parse_request: success\n\n");
+            } else if (n == -1) {
+              err_exit("phr_parse_request: failed, ignore the ->");
+            } else {
+              assert(n == -2);
+              puts("php_parse_request: partial");
+
+              if (php_buflen[client_idx()] == sizeof(php_buf[client_idx()]))
+                err_exit("php_parse_request: request_to_long");
+
+              pfds[i].events = POLLIN;
+              pfds[i].revents = -1;
+              continue;
+            }
+              
             puts("request: ");
             write(STDOUT_FILENO, php_buf[client_idx()], php_buflen[client_idx()]);
             putchar('\n');
