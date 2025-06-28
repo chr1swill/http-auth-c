@@ -21,11 +21,22 @@
 // the first connfd (#3) fill spot number 0 or at least 1
 // JUST A THOUGHT cause if we really have PFDSMAX fds in our array we will
 // run out of space by 3 which is not ideal
-#define RBUFS_HASH(connfd, sockfd) ((connfd) - (sockfd))
-#define client_idx() RBUFS_HASH(connfd, sockfd)
+#define PHP_HASHIDX(connfd, sockfd) ((connfd) - (sockfd))
+#define client_idx() PHP_HASHIDX(connfd, sockfd)
 
 #define err_exit(msg) \
 do { perror((msg)); exit(EXIT_FAILURE); } while(0); \
+
+static const char *php_buf[PFDSMAX][REQUESTBUFFERMAX];
+static size_t php_buflen[PFDSMAX];
+static const char **php_method[PFDSMAX];
+static size_t *php_methodlen[PFDSMAX];
+static const char **php_path[PFDSMAX];
+static size_t *php_pathlen[PFDSMAX];
+static int *php_minor_version[PFDSMAX];
+static struct phr_header *php_headers[PFDSMAX][8];
+static size_t *php_num_headers[PFDSMAX];
+static size_t php_return[PFDSMAX];
 
 static inline
 int get_non_blocking_listener()
