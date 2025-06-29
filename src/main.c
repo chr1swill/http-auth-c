@@ -11,6 +11,8 @@
 #include <assert.h>
 #include "picohttpparser.h"
 
+typedef _Bool bool;
+
 #define PORT "8080"
 #define BACKLOG 10
 #define PFDSMAX 1024
@@ -23,23 +25,171 @@
 // run out of space by 3 which is not ideal
 #define PHP_HASHIDX(connfd, sockfd) (((connfd) - (sockfd)) - 1)
 #define client_idx() PHP_HASHIDX(connfd, sockfd)
+#define PHP_NUM_HEADERS  8
 
 #define err_exit(msg) \
 do { perror((msg)); exit(EXIT_FAILURE); } while(0); \
 
-static char php_buf[PFDSMAX][REQUESTBUFFERMAX] = {0};
-static size_t php_buflen[PFDSMAX] = {0};
-static const char *php_method[PFDSMAX] = {0};
-static size_t php_methodlen[PFDSMAX] = {0};
-static const char *php_path[PFDSMAX] = {0};
-static size_t php_pathlen[PFDSMAX] = {0};
+enum http_method {
+  GET = 0x0,
+  HEAD,
+  POST,
+  PUT,
+  PATCH,
+  DELETE,
+  CONNECT,
+  OPTION,
+  TRACE,
+  INVALID_METHOD,
+};
 
-#define PHP_NUM_HEADERS  8
-static size_t php_num_headers[PFDSMAX] = {PHP_NUM_HEADERS};
-static struct phr_header php_headers[PFDSMAX][PHP_NUM_HEADERS] = {0};
+enum http_status {
+	continue                      = 100 // RFC 9110, 15.2.1
+	switchingprotocols            = 101 // RFC 9110, 15.2.2
+	processing                    = 102 // RFC 2518, 10.1
+	earlyhints                    = 103 // RFC 8297
 
-static int php_minor_version[PFDSMAX] = {0};
-static size_t php_prevbuflen[PFDSMAX] = {0};
+	ok                            = 200 // RFC 9110, 15.3.1
+	created                       = 201 // RFC 9110, 15.3.2
+	accepted                      = 202 // RFC 9110, 15.3.3
+	nonauthoritativeinfo          = 203 // RFC 9110, 15.3.4
+	nocontent                     = 204 // RFC 9110, 15.3.5
+	resetcontent                  = 205 // RFC 9110, 15.3.6
+	partialcontent                = 206 // RFC 9110, 15.3.7
+	multistatus                   = 207 // RFC 4918, 11.1
+	alreadyreported               = 208 // RFC 5842, 7.1
+	imused                        = 226 // RFC 3229, 10.4.1
+
+	multiplechoices               = 300 // RFC 9110, 15.4.1
+	movedpermanently              = 301 // RFC 9110, 15.4.2
+	found                         = 302 // RFC 9110, 15.4.3
+	seeother                      = 303 // RFC 9110, 15.4.4
+	notmodified                   = 304 // RFC 9110, 15.4.5
+	useproxy                      = 305 // RFC 9110, 15.4.6
+
+	temporaryredirect             = 307 // RFC 9110, 15.4.8
+	permanentredirect             = 308 // RFC 9110, 15.4.9
+
+	badrequest                    = 400 // RFC 9110, 15.5.1
+	unauthorized                  = 401 // RFC 9110, 15.5.2
+	paymentrequired               = 402 // RFC 9110, 15.5.3
+	forbidden                     = 403 // RFC 9110, 15.5.4
+	notfound                      = 404 // RFC 9110, 15.5.5
+	methodnotallowed              = 405 // RFC 9110, 15.5.6
+	notacceptable                 = 406 // RFC 9110, 15.5.7
+	proxyauthrequired             = 407 // RFC 9110, 15.5.8
+	requesttimeout                = 408 // RFC 9110, 15.5.9
+	conflict                      = 409 // RFC 9110, 15.5.10
+	gone                          = 410 // RFC 9110, 15.5.11
+	lengthrequired                = 411 // RFC 9110, 15.5.12
+	preconditionfailed            = 412 // RFC 9110, 15.5.13
+	requestentitytoolarge         = 413 // RFC 9110, 15.5.14
+	requesturitoolong             = 414 // RFC 9110, 15.5.15
+	unsupportedmediatype          = 415 // RFC 9110, 15.5.16
+	requestedrangenotsatisfiable  = 416 // RFC 9110, 15.5.17
+	expectationfailed             = 417 // RFC 9110, 15.5.18
+	teapot                        = 418 // RFC 9110, 15.5.19 (Unused)
+	misdirectedrequest            = 421 // RFC 9110, 15.5.20
+	unprocessableentity           = 422 // RFC 9110, 15.5.21
+	locked                        = 423 // RFC 4918, 11.3
+	faileddependency              = 424 // RFC 4918, 11.4
+	tooearly                      = 425 // RFC 8470, 5.2.
+	upgraderequired               = 426 // RFC 9110, 15.5.22
+	preconditionrequired          = 428 // RFC 6585, 3
+	toomanyrequests               = 429 // RFC 6585, 4
+	requestheaderfieldstoolarge   = 431 // RFC 6585, 5
+	unavailableforlegalreasons    = 451 // RFC 7725, 3
+
+	internalservererror           = 500 // RFC 9110, 15.6.1
+	notimplemented                = 501 // RFC 9110, 15.6.2
+	badgateway                    = 502 // RFC 9110, 15.6.3
+	serviceunavailable            = 503 // RFC 9110, 15.6.4
+	gatewaytimeout                = 504 // RFC 9110, 15.6.5
+	httpversionnotsupported       = 505 // RFC 9110, 15.6.6
+	variantalsonegotiates         = 506 // RFC 2295, 8.1
+	insufficientstorage           = 507 // RFC 4918, 11.5
+	loopdetected                  = 508 // RFC 5842, 7.2
+	notextended                   = 510 // RFC 2774, 7
+	networkauthenticationrequired = 511 // RFC 6585, 6
+};
+
+const char http_status_to_str[] {
+	[http_status.continue] = "Continue",
+	[http_status.switchingprotocols] = "Switching Protocols",
+	[http_status.processing] = "Processing",
+	[http_status.earlyhints] = "Early Hints",
+	[http_status.ok] = "Ok",
+	[http_status.created] = "Created",
+	[http_status.accepted] = "Accepted",
+	[http_status.nonauthoritativeinfo] = "Non Authoritative Info",
+	[http_status.nocontent] = "No Content",
+	[http_status.resetcontent] = "Reset Content",
+	[http_status.partialcontent] = "Partial Content",
+	[http_status.multistatus] = "Multi Status",
+	[http_status.alreadyreported] = "Already Reported",
+	[http_status.imused] = "Im Used",
+	[http_status.multiplechoices] = "Multiple Choices",
+	[http_status.movedpermanently] = "Moved Permanently",
+	[http_status.found] = "Found",
+	[http_status.seeother] = "See Other",
+	[http_status.notmodified] = "Not Modified",
+	[http_status.useproxy] = "Use Proxy",
+	[http_status.temporaryredirect] = "Temporary Redirect",
+	[http_status.permanentredirect] = "Permanent Redirect",
+	[http_status.badrequest] = "Bad Request",
+	[http_status.unauthorized] = "Unauthorized",
+	[http_status.paymentrequired] = "Payment Required",
+	[http_status.forbidden] = "Forbidden",
+	[http_status.notfound] = "Not Found",
+	[http_status.methodnotallowed] = "Method Not Allowed",
+	[http_status.notacceptable] = "Not Acceptable",
+	[http_status.proxyauthrequired] = "Proxy Auth Required",
+	[http_status.requesttimeout] = "Request Timeout",
+	[http_status.conflict] = "Conflict",
+	[http_status.gone] = "Gone",
+	[http_status.lengthrequired] = "Length Required",
+	[http_status.preconditionfailed] = "Precondition Failed",
+	[http_status.requestentitytoolarge] = "Request Entity Too Large",
+	[http_status.requesturitoolong] = "Request Uri Too Long",
+	[http_status.unsupportedmediatype] = "Unsupported Media Type",
+	[http_status.requestedrangenotsatisfiable] = "Requested Range Not Satisfiable",
+	[http_status.expectationfailed] = "Expectation Failed",
+	[http_status.teapot] = "Teapot",
+	[http_status.misdirectedrequest] = "Misdirected Request",
+	[http_status.unprocessableentity] = "Unprocessable Entity",
+	[http_status.locked] = "Locked",
+	[http_status.faileddependency] = "Failed Dependency",
+	[http_status.tooearly] = "Too Early",
+	[http_status.upgraderequired] = "Upgrade Required",
+	[http_status.preconditionrequired] = "Precondition Required",
+	[http_status.toomanyrequests] = "Too Many Requests",
+	[http_status.requestheaderfieldstoolarge] = "Request Header Fields Too Large",
+	[http_status.unavailableforlegalreasons] = "Unavailable For Legal Reasons",
+	[http_status.internalservererror] = "Internal Server Error",
+	[http_status.notimplemented] = "Not Implemented",
+	[http_status.badgateway] = "Bad Gateway",
+	[http_status.serviceunavailable] = "Service Unavailable",
+	[http_status.gatewaytimeout] = "Gateway Timeout",
+	[http_status.httpversionnotsupported] = "Http Version Not Supported",
+	[http_status.variantalsonegotiates] = "Variant Also Negotiates",
+	[http_status.insufficientstorage] = "Insufficient Storage",
+	[http_status.loopdetected] = "Loop Detected",
+	[http_status.notextended] = "Not Extended",
+	[http_status.networkauthenticationrequired] = "Network Authentication Required",
+};
+
+static char         php_buf[PFDSMAX][REQUESTBUFFERMAX]               = {0};
+static size_t       php_buflen[PFDSMAX]                              = {0};
+static const char * php_method[PFDSMAX]                              = {0};
+static size_t       php_methodlen[PFDSMAX]                           = {0};
+static const char * php_path[PFDSMAX]                                = {0};
+static size_t       php_pathlen[PFDSMAX]                             = {0};
+static size_t       php_num_headers[PFDSMAX]                         = {PHP_NUM_HEADERS};
+static struct       phr_header php_headers[PFDSMAX][PHP_NUM_HEADERS] = {0};
+static int          php_minor_version[PFDSMAX]                       = {0};
+static size_t       php_prevbuflen[PFDSMAX]                          = {0};
+
+static enum http_status client_status_code[PFDSMAX] = {http_status.STATUS_UNSET};
 
 static inline
 int get_non_blocking_listener()
@@ -139,6 +289,56 @@ int pollfd_add(nfds_t *nfds, struct pollfd *pfds, int connfd, int events)
   }
   
   return(-1);
+}
+
+static inline
+enum http_method as_http_method(const char *method, size_t methodlen)
+{
+  if (memcmp(method, "GET", sizeof "GET") == 0) {
+    return http_method.GET;
+  } else if (memcmp(method, "HEAD", sizeof "HEAD") == 0) {
+    return http_method.HEAD;
+  } else if (memcmp(method, "POST", sizeof "POST") == 0) {
+    return http_method.POST;
+  } else if (memcmp(method, "PUT", sizeof "PUT") == 0) {
+    return http_method.PUT;
+  } else if (memcmp(method, "PATCH", sizeof "PATCH") == 0) {
+    return http_method.PATCH;
+  } else if (memcmp(method, "DELETE", sizeof "DELETE") == 0) {
+    return http_method.DELETE;
+  } else if (memcmp(method, "CONNECT", sizeof "CONNECT") == 0) {
+    return http_method.CONNECT;
+  } else if (memcmp(method, "OPTION", sizeof "OPTION") == 0) {
+    return http_method.OPTION;
+  } else if (memcmp(method, "TRACE", sizeof "TRACE") == 0) {
+    return http_method.TRACE;
+  } else {
+    return http_method.INVALID_METHOD;
+  }
+}
+
+static inline
+bool http_method_is(enum http_method wanted, const char *method, size_t methodlen)
+{
+  return (wanted == as_http_method(method, methodlen));
+}
+
+static inline
+int http_response_format_write(int connfd,
+    int minor_version, enum http_status status,
+    char *content_type, char *content, size_t contentlen)
+{
+  return dprintf(connfd,
+      "HTTP/1.%d %d\r\n" 
+      "accept-ranges: bytes\r\n"
+      "content-type: %s\r\n" // example value => text/html; charset=utf-8
+      "content-length: %zu\r\n"
+      "\r\n"
+      "%.*s"
+      minor_version, status,
+      content_type,
+      contentlen,
+      (int)contentlen, content);
 }
 
 int main()
@@ -246,7 +446,6 @@ int main()
                 &php_minor_version[client_idx()],
                 php_headers[client_idx()], &php_num_headers[client_idx()],
                 php_prevbuflen[client_idx()]);
-
             if (n > 0) {
               puts("php_parse_request: success\n\n");
             } else if (n == -1) {
@@ -263,43 +462,31 @@ int main()
               continue;
             }
               
-            fputs("request: ", stdout);
-            fflush(stdout);
-            write(STDOUT_FILENO, php_buf[client_idx()], php_buflen[client_idx()]);
-            putchar('\n');
-
-            fputs("method: ", stdout);
-            fflush(stdout);
-            write(STDOUT_FILENO, php_method[client_idx()], php_methodlen[client_idx()]);
-            putchar('\n');
-
-            fputs("path: ", stdout);
-            fflush(stdout);
-            write(STDOUT_FILENO, php_path[client_idx()], php_pathlen[client_idx()]);
-            putchar('\n');
-
-            printf("version: HTTP/1.%d\n", php_minor_version[client_idx()]);
-            fflush(stdout);
-
-            fputs("headers:\n", stdout);
-            fflush(stdout);
-            for (size_t it = 0; it < php_num_headers[client_idx()]; ++it)
-            {
-              fputs("\theader name: ", stdout);
-              fflush(stdout);
-              write(STDOUT_FILENO, php_headers[client_idx()][it].name, php_headers[client_idx()][it].name_len);
-              putchar('\n');
-
-              fputs("\theader value: ", stdout);
-              fflush(stdout);
-              write(STDOUT_FILENO, php_headers[client_idx()][it].value, php_headers[client_idx()][it].value_len);
-              putchar('\n');
+            if (!http_method_is(http_method.GET,
+                  php_method[client_idx()],
+                  php_methodlen[client_idx()])) {
+              // format some http error buff and set fd ready for writing
+              //pfds[i].events = POLLOUT;
+              //pfds[i].revents = -1;
+              //continue;
             }
+
+            if (path_is("/",
+                  php_path[client_idx()],
+                  php_pathlen[client_idx()])) {
+            }
+
+            // do someshit http
 
             return(0);
           }
         break;
-        case POLLOUT: printf("POLLOUT\n");
+        case POLLOUT: 
+        printf("POLLOUT\n");
+
+        int http_response_format_write(int connfd,
+            int minor_version, enum http_status status,
+            char *content_type, char *content, size_t contentlen);
         break;
         case POLLERR: printf("POLLERR\n"); 
         break;
