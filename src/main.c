@@ -263,28 +263,35 @@ int main()
               continue;
             }
               
-            puts("request: ");
+            fputs("request: ", stdout);
+            fflush(stdout);
             write(STDOUT_FILENO, php_buf[client_idx()], php_buflen[client_idx()]);
             putchar('\n');
 
-            puts("method: ");
+            fputs("method: ", stdout);
+            fflush(stdout);
             write(STDOUT_FILENO, php_method[client_idx()], php_methodlen[client_idx()]);
             putchar('\n');
 
-            puts("path: ");
+            fputs("path: ", stdout);
+            fflush(stdout);
             write(STDOUT_FILENO, php_path[client_idx()], php_pathlen[client_idx()]);
             putchar('\n');
 
             printf("version: HTTP/1.%d\n", php_minor_version[client_idx()]);
+            fflush(stdout);
 
-            puts("headers:\n");
+            fputs("headers:\n", stdout);
+            fflush(stdout);
             for (size_t it = 0; it < php_num_headers[client_idx()]; ++it)
             {
-              puts("\theader name: ");
+              fputs("\theader name: ", stdout);
+              fflush(stdout);
               write(STDOUT_FILENO, php_headers[client_idx()][it].name, php_headers[client_idx()][it].name_len);
               putchar('\n');
 
-              puts("\theader value: ");
+              fputs("\theader value: ", stdout);
+              fflush(stdout);
               write(STDOUT_FILENO, php_headers[client_idx()][it].value, php_headers[client_idx()][it].value_len);
               putchar('\n');
             }
