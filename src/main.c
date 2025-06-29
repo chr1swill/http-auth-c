@@ -275,7 +275,6 @@ int main()
             write(STDOUT_FILENO, php_path[client_idx()], php_pathlen[client_idx()]);
             putchar('\n');
 
-            puts("version: HTTP/1.");
             printf("version: HTTP/1.%d\n", php_minor_version[client_idx()]);
 
             puts("headers:\n");
