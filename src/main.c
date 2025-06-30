@@ -396,9 +396,7 @@ int main()
                 pfds[i].events = POLLIN;
                 pfds[i].revents = -1;
                 continue;
-              }
-              else
-              {
+              } else {
                 // TODO: do something better than
                 // crashing after single failed accept
                 err_exit("accept");
@@ -416,9 +414,7 @@ int main()
                "cannot accept new connection, pfds array at capacity\n");
               continue;
             }
-          }
-          else
-          {
+          } else {
             printf("conn socket fired POLLIN event\n");
 
             while((n = read(pfds[i].fd,
