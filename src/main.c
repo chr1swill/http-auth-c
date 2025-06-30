@@ -375,9 +375,10 @@ int main()
       if (pfds[i].revents == 0) continue;
       --ready;
 
+      puts("here");
       // TODO: add the rest or the events
       // that could be in revents (POLLHUP, etc...)
-      switch ((pfds[i].revents & (POLLIN | POLLOUT | POLLERR)))
+      switch ((pfds[i].revents & (POLLIN | POLLOUT | POLLERR | POLLHUP | POLLNVAL)))
       {
         case POLLIN:
           if (pfds[i].fd == sockfd)
@@ -487,20 +488,49 @@ int main()
           }
         break;
         case POLLOUT: 
-        printf("POLLOUT\n");
+        printf("fd %d fired POLLOUT event\n", pfds[i].fd);
 
         if (http_response_format_write(pfds[i].fd,
               php_minor_version[client_idx()],
               client_status_code[client_idx()],
               "text/plain",
               http_status_to_str[client_status_code[client_idx()]],
-              sizeof http_status_to_str[client_status_code[client_idx()]]) <= 0) {
+              strlen(http_status_to_str[client_status_code[client_idx()]])) <= 0) {
           err_exit("http_response_format_write: dprintf");
         }
+
+        pfds[i].events = POLLIN;
+        pfds[i].revents = -1;
         break;
         case POLLERR: printf("POLLERR\n"); 
         break;
-        default: printf("that is not how that works brother\n"); 
+        case POLLHUP: printf("POLLHUP\n"); 
+        break;
+        case POLLNVAL: printf("POLLNVAL\n"); 
+        break;
+        default:
+        printf("something is messed but brother, pfds[%ld].revents=%d\n",
+            i, pfds[i].revents); 
+        
+        printf("has POLLIN=%s\n", (pfds[i].revents & POLLIN) == POLLIN ? "true" : "false");
+        printf("has POLLPRI=%s\n", (pfds[i].revents & POLLPRI) == POLLPRI ? "true" : "false");
+        printf("has POLLOUT=%s\n", (pfds[i].revents & POLLOUT) == POLLOUT ? "true" : "false");
+#if defined __USE_XOPEN || defined __USE_XOPEN2K8
+        printf("has POLLRDNORM=%s\n", (pfds[i].revents & POLLRDNORM) == POLLRDNORM ? "true" : "false");
+        printf("has POLLRDBAND=%s\n", (pfds[i].revents & POLLRDBAND) == POLLRDBAND ? "true" : "false");
+        printf("has POLLWRNORM=%s\n", (pfds[i].revents & POLLWRNORM) == POLLWRNORM ? "true" : "false");
+        printf("has POLLWRBAND=%s\n", (pfds[i].revents & POLLWRBAND) == POLLWRBAND ? "true" : "false");
+        printf("has POLLWRNORM=%s\n", (pfds[i].revents & POLLWRNORM) == POLLWRNORM ? "true" : "false");
+#endif
+#ifdef __USE_GNU
+        printf("has POLLMSG=%s\n", (pfds[i].revents & POLLMSG) == POLLMSG ? "true" : "false");
+        printf("has POLLREMOVE=%s\n", (pfds[i].revents & POLLREMOVE) == POLLREMOVE ? "true" : "false");
+        printf("has POLLRDHUP=%s\n", (pfds[i].revents & POLLRDHUP) == POLLRDHUP ? "true" : "false");
+#endif
+        printf("has POLLERR=%s\n", (pfds[i].revents & POLLERR) == POLLERR ? "true" : "false");
+        printf("has POLLHUP=%s\n", (pfds[i].revents & POLLHUP) == POLLHUP ? "true" : "false");
+        printf("has POLLNVAL=%s\n", (pfds[i].revents & POLLNVAL) == POLLNVAL ? "true" : "false");
+        return(1);
       }
     }
   }
