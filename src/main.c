@@ -31,151 +31,147 @@ typedef _Bool bool;
 do { perror((msg)); exit(EXIT_FAILURE); } while(0); \
 
 enum http_method {
-  GET = 0x0,
-  HEAD,
-  POST,
-  PUT,
-  PATCH,
-  DELETE,
-  CONNECT,
-  OPTION,
-  TRACE,
-  INVALID_METHOD,
+  http_method_get = 0x0,
+  http_method_head,
+  http_method_post,
+  http_method_put,
+  http_method_patch,
+  http_method_delete,
+  http_method_connect,
+  http_method_option,
+  http_method_trace,
+  http_method_invalid_method,
 };
 
 enum http_status {
-	continue                      = 100 // RFC 9110, 15.2.1
-	switchingprotocols            = 101 // RFC 9110, 15.2.2
-	processing                    = 102 // RFC 2518, 10.1
-	earlyhints                    = 103 // RFC 8297
-
-	ok                            = 200 // RFC 9110, 15.3.1
-	created                       = 201 // RFC 9110, 15.3.2
-	accepted                      = 202 // RFC 9110, 15.3.3
-	nonauthoritativeinfo          = 203 // RFC 9110, 15.3.4
-	nocontent                     = 204 // RFC 9110, 15.3.5
-	resetcontent                  = 205 // RFC 9110, 15.3.6
-	partialcontent                = 206 // RFC 9110, 15.3.7
-	multistatus                   = 207 // RFC 4918, 11.1
-	alreadyreported               = 208 // RFC 5842, 7.1
-	imused                        = 226 // RFC 3229, 10.4.1
-
-	multiplechoices               = 300 // RFC 9110, 15.4.1
-	movedpermanently              = 301 // RFC 9110, 15.4.2
-	found                         = 302 // RFC 9110, 15.4.3
-	seeother                      = 303 // RFC 9110, 15.4.4
-	notmodified                   = 304 // RFC 9110, 15.4.5
-	useproxy                      = 305 // RFC 9110, 15.4.6
-
-	temporaryredirect             = 307 // RFC 9110, 15.4.8
-	permanentredirect             = 308 // RFC 9110, 15.4.9
-
-	badrequest                    = 400 // RFC 9110, 15.5.1
-	unauthorized                  = 401 // RFC 9110, 15.5.2
-	paymentrequired               = 402 // RFC 9110, 15.5.3
-	forbidden                     = 403 // RFC 9110, 15.5.4
-	notfound                      = 404 // RFC 9110, 15.5.5
-	methodnotallowed              = 405 // RFC 9110, 15.5.6
-	notacceptable                 = 406 // RFC 9110, 15.5.7
-	proxyauthrequired             = 407 // RFC 9110, 15.5.8
-	requesttimeout                = 408 // RFC 9110, 15.5.9
-	conflict                      = 409 // RFC 9110, 15.5.10
-	gone                          = 410 // RFC 9110, 15.5.11
-	lengthrequired                = 411 // RFC 9110, 15.5.12
-	preconditionfailed            = 412 // RFC 9110, 15.5.13
-	requestentitytoolarge         = 413 // RFC 9110, 15.5.14
-	requesturitoolong             = 414 // RFC 9110, 15.5.15
-	unsupportedmediatype          = 415 // RFC 9110, 15.5.16
-	requestedrangenotsatisfiable  = 416 // RFC 9110, 15.5.17
-	expectationfailed             = 417 // RFC 9110, 15.5.18
-	teapot                        = 418 // RFC 9110, 15.5.19 (Unused)
-	misdirectedrequest            = 421 // RFC 9110, 15.5.20
-	unprocessableentity           = 422 // RFC 9110, 15.5.21
-	locked                        = 423 // RFC 4918, 11.3
-	faileddependency              = 424 // RFC 4918, 11.4
-	tooearly                      = 425 // RFC 8470, 5.2.
-	upgraderequired               = 426 // RFC 9110, 15.5.22
-	preconditionrequired          = 428 // RFC 6585, 3
-	toomanyrequests               = 429 // RFC 6585, 4
-	requestheaderfieldstoolarge   = 431 // RFC 6585, 5
-	unavailableforlegalreasons    = 451 // RFC 7725, 3
-
-	internalservererror           = 500 // RFC 9110, 15.6.1
-	notimplemented                = 501 // RFC 9110, 15.6.2
-	badgateway                    = 502 // RFC 9110, 15.6.3
-	serviceunavailable            = 503 // RFC 9110, 15.6.4
-	gatewaytimeout                = 504 // RFC 9110, 15.6.5
-	httpversionnotsupported       = 505 // RFC 9110, 15.6.6
-	variantalsonegotiates         = 506 // RFC 2295, 8.1
-	insufficientstorage           = 507 // RFC 4918, 11.5
-	loopdetected                  = 508 // RFC 5842, 7.2
-	notextended                   = 510 // RFC 2774, 7
-	networkauthenticationrequired = 511 // RFC 6585, 6
+	http_status_continue                             = 100,
+	http_status_switchingprotocols                   = 101,
+	http_status_processing                           = 102,
+	http_status_earlyhints                           = 103,
+	http_status_ok                                   = 200,
+	http_status_created                              = 201,
+	http_status_accepted                             = 202,
+	http_status_nonauthoritativeinfo                 = 203,
+	http_status_nocontent                            = 204,
+	http_status_resetcontent                         = 205,
+	http_status_partialcontent                       = 206,
+	http_status_multistatus                          = 207,
+	http_status_alreadyreported                      = 208,
+	http_status_imused                               = 226,
+	http_status_multiplechoices                      = 300,
+	http_status_movedpermanently                     = 301,
+	http_status_found                                = 302,
+	http_status_seeother                             = 303,
+	http_status_notmodified                          = 304,
+	http_status_useproxy                             = 305,
+	http_status_temporaryredirect                    = 307,
+	http_status_permanentredirect                    = 308,
+	http_status_badrequest                           = 400,
+	http_status_unauthorized                         = 401,
+	http_status_paymentrequired                      = 402,
+	http_status_forbidden                            = 403,
+	http_status_notfound                             = 404,
+	http_status_methodnotallowed                     = 405,
+	http_status_notacceptable                        = 406,
+	http_status_proxyauthrequired                    = 407,
+	http_status_requesttimeout                       = 408,
+	http_status_conflict                             = 409,
+	http_status_gone                                 = 410,
+	http_status_lengthrequired                       = 411,
+	http_status_preconditionfailed                   = 412,
+	http_status_requestentitytoolarge                = 413,
+	http_status_requesturitoolong                    = 414,
+	http_status_unsupportedmediatype                 = 415,
+	http_status_requestedrangenotsatisfiable         = 416,
+	http_status_expectationfailed                    = 417,
+	http_status_teapot                               = 418,
+	http_status_misdirectedrequest                   = 421,
+	http_status_unprocessableentity                  = 422,
+	http_status_locked                               = 423,
+	http_status_faileddependency                     = 424,
+	http_status_tooearly                             = 425,
+	http_status_upgraderequired                      = 426,
+	http_status_preconditionrequired                 = 428,
+	http_status_toomanyrequests                      = 429,
+	http_status_requestheaderfieldstoolarge          = 431,
+	http_status_unavailableforlegalreasons           = 451,
+	http_status_internalservererror                  = 500,
+	http_status_notimplemented                       = 501,
+	http_status_badgateway                           = 502,
+	http_status_serviceunavailable                   = 503,
+	http_status_gatewaytimeout                       = 504,
+	http_status_httpversionnotsupported              = 505,
+	http_status_variantalsonegotiates                = 506,
+	http_status_insufficientstorage                  = 507,
+	http_status_loopdetected                         = 508,
+	http_status_notextended                          = 510,
+	http_status_networkauthenticationrequired        = 511,
+  http_status_status_unset,
 };
 
-const char http_status_to_str[] {
-	[http_status.continue] = "Continue",
-	[http_status.switchingprotocols] = "Switching Protocols",
-	[http_status.processing] = "Processing",
-	[http_status.earlyhints] = "Early Hints",
-	[http_status.ok] = "Ok",
-	[http_status.created] = "Created",
-	[http_status.accepted] = "Accepted",
-	[http_status.nonauthoritativeinfo] = "Non Authoritative Info",
-	[http_status.nocontent] = "No Content",
-	[http_status.resetcontent] = "Reset Content",
-	[http_status.partialcontent] = "Partial Content",
-	[http_status.multistatus] = "Multi Status",
-	[http_status.alreadyreported] = "Already Reported",
-	[http_status.imused] = "Im Used",
-	[http_status.multiplechoices] = "Multiple Choices",
-	[http_status.movedpermanently] = "Moved Permanently",
-	[http_status.found] = "Found",
-	[http_status.seeother] = "See Other",
-	[http_status.notmodified] = "Not Modified",
-	[http_status.useproxy] = "Use Proxy",
-	[http_status.temporaryredirect] = "Temporary Redirect",
-	[http_status.permanentredirect] = "Permanent Redirect",
-	[http_status.badrequest] = "Bad Request",
-	[http_status.unauthorized] = "Unauthorized",
-	[http_status.paymentrequired] = "Payment Required",
-	[http_status.forbidden] = "Forbidden",
-	[http_status.notfound] = "Not Found",
-	[http_status.methodnotallowed] = "Method Not Allowed",
-	[http_status.notacceptable] = "Not Acceptable",
-	[http_status.proxyauthrequired] = "Proxy Auth Required",
-	[http_status.requesttimeout] = "Request Timeout",
-	[http_status.conflict] = "Conflict",
-	[http_status.gone] = "Gone",
-	[http_status.lengthrequired] = "Length Required",
-	[http_status.preconditionfailed] = "Precondition Failed",
-	[http_status.requestentitytoolarge] = "Request Entity Too Large",
-	[http_status.requesturitoolong] = "Request Uri Too Long",
-	[http_status.unsupportedmediatype] = "Unsupported Media Type",
-	[http_status.requestedrangenotsatisfiable] = "Requested Range Not Satisfiable",
-	[http_status.expectationfailed] = "Expectation Failed",
-	[http_status.teapot] = "Teapot",
-	[http_status.misdirectedrequest] = "Misdirected Request",
-	[http_status.unprocessableentity] = "Unprocessable Entity",
-	[http_status.locked] = "Locked",
-	[http_status.faileddependency] = "Failed Dependency",
-	[http_status.tooearly] = "Too Early",
-	[http_status.upgraderequired] = "Upgrade Required",
-	[http_status.preconditionrequired] = "Precondition Required",
-	[http_status.toomanyrequests] = "Too Many Requests",
-	[http_status.requestheaderfieldstoolarge] = "Request Header Fields Too Large",
-	[http_status.unavailableforlegalreasons] = "Unavailable For Legal Reasons",
-	[http_status.internalservererror] = "Internal Server Error",
-	[http_status.notimplemented] = "Not Implemented",
-	[http_status.badgateway] = "Bad Gateway",
-	[http_status.serviceunavailable] = "Service Unavailable",
-	[http_status.gatewaytimeout] = "Gateway Timeout",
-	[http_status.httpversionnotsupported] = "Http Version Not Supported",
-	[http_status.variantalsonegotiates] = "Variant Also Negotiates",
-	[http_status.insufficientstorage] = "Insufficient Storage",
-	[http_status.loopdetected] = "Loop Detected",
-	[http_status.notextended] = "Not Extended",
-	[http_status.networkauthenticationrequired] = "Network Authentication Required",
+static const char *http_status_to_str[] = {
+	[http_status_continue] = "Continue",
+	[http_status_switchingprotocols] = "Switching Protocols",
+	[http_status_processing] = "Processing",
+	[http_status_earlyhints] = "Early Hints",
+	[http_status_ok] = "Ok",
+	[http_status_created] = "Created",
+	[http_status_accepted] = "Accepted",
+	[http_status_nonauthoritativeinfo] = "Non Authoritative Info",
+	[http_status_nocontent] = "No Content",
+	[http_status_resetcontent] = "Reset Content",
+	[http_status_partialcontent] = "Partial Content",
+	[http_status_multistatus] = "Multi Status",
+	[http_status_alreadyreported] = "Already Reported",
+	[http_status_imused] = "Im Used",
+	[http_status_multiplechoices] = "Multiple Choices",
+	[http_status_movedpermanently] = "Moved Permanently",
+	[http_status_found] = "Found",
+	[http_status_seeother] = "See Other",
+	[http_status_notmodified] = "Not Modified",
+	[http_status_useproxy] = "Use Proxy",
+	[http_status_temporaryredirect] = "Temporary Redirect",
+	[http_status_permanentredirect] = "Permanent Redirect",
+	[http_status_badrequest] = "Bad Request",
+	[http_status_unauthorized] = "Unauthorized",
+	[http_status_paymentrequired] = "Payment Required",
+	[http_status_forbidden] = "Forbidden",
+	[http_status_notfound] = "Not Found",
+	[http_status_methodnotallowed] = "Method Not Allowed",
+	[http_status_notacceptable] = "Not Acceptable",
+	[http_status_proxyauthrequired] = "Proxy Auth Required",
+	[http_status_requesttimeout] = "Request Timeout",
+	[http_status_conflict] = "Conflict",
+	[http_status_gone] = "Gone",
+	[http_status_lengthrequired] = "Length Required",
+	[http_status_preconditionfailed] = "Precondition Failed",
+	[http_status_requestentitytoolarge] = "Request Entity Too Large",
+	[http_status_requesturitoolong] = "Request Uri Too Long",
+	[http_status_unsupportedmediatype] = "Unsupported Media Type",
+	[http_status_requestedrangenotsatisfiable] = "Requested Range Not Satisfiable",
+	[http_status_expectationfailed] = "Expectation Failed",
+	[http_status_teapot] = "Teapot",
+	[http_status_misdirectedrequest] = "Misdirected Request",
+	[http_status_unprocessableentity] = "Unprocessable Entity",
+	[http_status_locked] = "Locked",
+	[http_status_faileddependency] = "Failed Dependency",
+	[http_status_tooearly] = "Too Early",
+	[http_status_upgraderequired] = "Upgrade Required",
+	[http_status_preconditionrequired] = "Precondition Required",
+	[http_status_toomanyrequests] = "Too Many Requests",
+	[http_status_requestheaderfieldstoolarge] = "Request Header Fields Too Large",
+	[http_status_unavailableforlegalreasons] = "Unavailable For Legal Reasons",
+	[http_status_internalservererror] = "Internal Server Error",
+	[http_status_notimplemented] = "Not Implemented",
+	[http_status_badgateway] = "Bad Gateway",
+	[http_status_serviceunavailable] = "Service Unavailable",
+	[http_status_gatewaytimeout] = "Gateway Timeout",
+	[http_status_httpversionnotsupported] = "Http Version Not Supported",
+	[http_status_variantalsonegotiates] = "Variant Also Negotiates",
+	[http_status_insufficientstorage] = "Insufficient Storage",
+	[http_status_loopdetected] = "Loop Detected",
+	[http_status_notextended] = "Not Extended",
+	[http_status_networkauthenticationrequired] = "Network Authentication Required",
 };
 
 static char         php_buf[PFDSMAX][REQUESTBUFFERMAX]               = {0};
@@ -189,7 +185,7 @@ static struct       phr_header php_headers[PFDSMAX][PHP_NUM_HEADERS] = {0};
 static int          php_minor_version[PFDSMAX]                       = {0};
 static size_t       php_prevbuflen[PFDSMAX]                          = {0};
 
-static enum http_status client_status_code[PFDSMAX] = {http_status.STATUS_UNSET};
+static enum http_status client_status_code[PFDSMAX] = {http_status_status_unset};
 
 static inline
 int get_non_blocking_listener()
@@ -292,41 +288,47 @@ int pollfd_add(nfds_t *nfds, struct pollfd *pfds, int connfd, int events)
 }
 
 static inline
-enum http_method as_http_method(const char *method, size_t methodlen)
+enum http_method as_http_method(const char *method)
 {
   if (memcmp(method, "GET", sizeof "GET") == 0) {
-    return http_method.GET;
+    return http_method_get;
   } else if (memcmp(method, "HEAD", sizeof "HEAD") == 0) {
-    return http_method.HEAD;
+    return http_method_head;
   } else if (memcmp(method, "POST", sizeof "POST") == 0) {
-    return http_method.POST;
+    return http_method_post;
   } else if (memcmp(method, "PUT", sizeof "PUT") == 0) {
-    return http_method.PUT;
+    return http_method_put;
   } else if (memcmp(method, "PATCH", sizeof "PATCH") == 0) {
-    return http_method.PATCH;
+    return http_method_patch;
   } else if (memcmp(method, "DELETE", sizeof "DELETE") == 0) {
-    return http_method.DELETE;
+    return http_method_delete;
   } else if (memcmp(method, "CONNECT", sizeof "CONNECT") == 0) {
-    return http_method.CONNECT;
+    return http_method_connect;
   } else if (memcmp(method, "OPTION", sizeof "OPTION") == 0) {
-    return http_method.OPTION;
+    return http_method_option;
   } else if (memcmp(method, "TRACE", sizeof "TRACE") == 0) {
-    return http_method.TRACE;
+    return http_method_trace;
   } else {
-    return http_method.INVALID_METHOD;
+    return http_method_invalid_method;
   }
 }
 
 static inline
-bool http_method_is(enum http_method wanted, const char *method, size_t methodlen)
+bool http_method_is(enum http_method wanted, const char *method)
 {
-  return (wanted == as_http_method(method, methodlen));
+  return (wanted == as_http_method(method));
+}
+
+static inline
+bool http_path_is(const char *desired_path, const char *received_path, size_t received_pathlen)
+{
+  return (memcmp(desired_path, received_path, received_pathlen) == 0);
 }
 
 static inline
 int http_response_format_write(int connfd,
     int minor_version, enum http_status status,
-    char *content_type, char *content, size_t contentlen)
+    char *content_type, const char *content, size_t contentlen)
 {
   return dprintf(connfd,
       "HTTP/1.%d %d\r\n" 
@@ -334,7 +336,7 @@ int http_response_format_write(int connfd,
       "content-type: %s\r\n" // example value => text/html; charset=utf-8
       "content-length: %zu\r\n"
       "\r\n"
-      "%.*s"
+      "%.*s",
       minor_version, status,
       content_type,
       contentlen,
@@ -462,31 +464,39 @@ int main()
               continue;
             }
               
-            if (!http_method_is(http_method.GET,
-                  php_method[client_idx()],
-                  php_methodlen[client_idx()])) {
-              // format some http error buff and set fd ready for writing
-              //pfds[i].events = POLLOUT;
-              //pfds[i].revents = -1;
-              //continue;
+            if (!http_method_is(http_method_get, php_method[client_idx()])) {
+              client_status_code[client_idx()] = http_status_methodnotallowed;
+              pfds[i].events = POLLOUT;
+              pfds[i].revents = -1;
+              continue;
             }
 
-            if (path_is("/",
+            if (http_path_is("/",
                   php_path[client_idx()],
                   php_pathlen[client_idx()])) {
+              client_status_code[client_idx()] = http_status_ok;
+              pfds[i].events = POLLOUT;
+              pfds[i].revents = -1;
+              continue;
             }
 
-            // do someshit http
-
-            return(0);
+            client_status_code[client_idx()] = http_status_notfound;
+            pfds[i].events = POLLOUT;
+            pfds[i].revents = -1;
+            continue;
           }
         break;
         case POLLOUT: 
         printf("POLLOUT\n");
 
-        int http_response_format_write(int connfd,
-            int minor_version, enum http_status status,
-            char *content_type, char *content, size_t contentlen);
+        if (http_response_format_write(pfds[i].fd,
+              php_minor_version[client_idx()],
+              client_status_code[client_idx()],
+              "text/plain",
+              http_status_to_str[client_status_code[client_idx()]],
+              sizeof http_status_to_str[client_status_code[client_idx()]]) <= 0) {
+          err_exit("http_response_format_write: dprintf");
+        }
         break;
         case POLLERR: printf("POLLERR\n"); 
         break;
