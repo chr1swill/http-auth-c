@@ -326,6 +326,16 @@ bool http_path_is(const char *desired_path, const char *received_path, size_t re
 }
 
 static inline
+void close_and_clear_pfd(struct pollfd *pfds)
+{
+  while(close(pfds->fd) == -1 && errno == EINTR);
+
+  pfds->fd = -1;
+  pfds->events = -1;
+  pfds->revents = -1;
+}
+
+static inline
 int http_response_format_write(int connfd,
     int minor_version, enum http_status status,
     char *content_type, const char *content, size_t contentlen)
@@ -495,8 +505,8 @@ int main()
           err_exit("http_response_format_write: dprintf");
         }
 
-        pfds[i].events = POLLIN;
-        pfds[i].revents = -1;
+        close_and_clear_pfd(&pfds[i]);
+
         break;
         case POLLERR: printf("POLLERR\n"); 
         break;
