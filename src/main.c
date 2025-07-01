@@ -272,23 +272,72 @@ int main()
         case POLLIN:
           if (pfds[i].fd == sockfd)
           {
-            printf("sockfd got event\n");
+            printf("server sockfd got POLLIN\n");
 
-            // TODO: right now I don't care about the
-            // of the connected peer,
+            // right now I don't care about the
+            // of the connected peer ip address
             // when I do this will need to change
-            connfd = accept(sockfd, NULL, NULL); 
+            while ((connfd = accept(sockfd, NULL, NULL))
+                == -1 && errno == EINTR)
             if (connfd == -1)
             {
-              if (errno == EAGAIN || errno == EWOULDBLOCK)
+              switch (errno)
               {
-                pfds[i].events = POLLIN;
-                pfds[i].revents = -1;
-                continue;
-              } else {
-                // TODO: do something better than
-                // crashing after single failed accept
-                err_exit("accept");
+                case EWOULDBLOCK:
+                  pfds[i].events = POLLIN;
+                  pfds[i].revents = -1;
+                  continue;
+                case EBADF: 
+                  assert(1 == 0 &&
+                      "accept EBADF should never happend: unreachable"); 
+                  break;
+                case ECONNABORTED:
+                  perror("accept");
+                  continue;
+                case EFAULT:
+                  assert(1 == 0 &&
+                      "accept EFAULT should never happend: unreachable");
+                  break;
+                case EINTR:
+                  assert(1 == 0 &&
+                      "accept EINTR should never happend: unreachable");
+                  break;
+                case EINVAL:
+                  assert(1 == 0 &&
+                      "accept EINVAL should never happend: unreachable");
+                  break;
+                case EMFILE:
+                  err_exit("accept errno == EMFILE");
+                  break;
+                case ENFILE:
+                  err_exit("accept errno == EMFILE");
+                  break;
+                case ENOBUFS:
+                case ENOMEM:
+                  err_exit("accept errno == ENOBUFS || errno == ENOMEM");
+                  break;
+                case ENOTSOCK:
+                  assert(1 == 0 &&
+                      "accept ENOTSOCK should never happend: unreachable");
+                  break;
+                case EOPNOTSUPP:
+                  assert(1 == 0 &&
+                      "accept EOPNOTSUPP should never happend: unreachable");
+                  break;
+                case EPERM:
+                  err_exit("accept: issue with your fire wall setup");
+                  break;
+                case EPROTO:
+                case ENOSR:
+                case ESOCKTNOSUPPORT:
+                case ERESTART:
+                case ETIMEDOUT:
+                case EPROTONOSUPPORT:
+                  err_exit("accept: some sort of protocol or network error occured");
+                  break;
+                default:
+                  err_exit("accept: an unknow error occured");
+                  break;
               }
             }
 
