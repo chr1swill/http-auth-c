@@ -18,7 +18,7 @@ fi
 
 mkdir -p "$BIN"
 
-gcc -o ${BIN}/main ${SRC}/main.c ${SRC}/picohttpparser.c ${CFLAGS}
+gcc -o ${BIN}/main ${SRC}/main.c ${SRC}/picohttpparser.c ${SRC}/http_helpers.c ${CFLAGS}
 
 # only works on a single file
 # CFLAGS="-fverbose-asm -S"

@@ -1,0 +1,90 @@
+#ifndef http_helpers_h
+#define http_helpers_h
+
+#include <stddef.h>
+#include <stdbool.h>
+
+enum http_method {
+  http_method_get = 0x0,
+  http_method_head,
+  http_method_post,
+  http_method_put,
+  http_method_patch,
+  http_method_delete,
+  http_method_connect,
+  http_method_option,
+  http_method_trace,
+  http_method_invalid_method,
+};
+
+enum http_status {
+	http_status_continue                             = 100,
+	http_status_switchingprotocols                   = 101,
+	http_status_processing                           = 102,
+	http_status_earlyhints                           = 103,
+	http_status_ok                                   = 200,
+	http_status_created                              = 201,
+	http_status_accepted                             = 202,
+	http_status_nonauthoritativeinfo                 = 203,
+	http_status_nocontent                            = 204,
+	http_status_resetcontent                         = 205,
+	http_status_partialcontent                       = 206,
+	http_status_multistatus                          = 207,
+	http_status_alreadyreported                      = 208,
+	http_status_imused                               = 226,
+	http_status_multiplechoices                      = 300,
+	http_status_movedpermanently                     = 301,
+	http_status_found                                = 302,
+	http_status_seeother                             = 303,
+	http_status_notmodified                          = 304,
+	http_status_useproxy                             = 305,
+	http_status_temporaryredirect                    = 307,
+	http_status_permanentredirect                    = 308,
+	http_status_badrequest                           = 400,
+	http_status_unauthorized                         = 401,
+	http_status_paymentrequired                      = 402,
+	http_status_forbidden                            = 403,
+	http_status_notfound                             = 404,
+	http_status_methodnotallowed                     = 405,
+	http_status_notacceptable                        = 406,
+	http_status_proxyauthrequired                    = 407,
+	http_status_requesttimeout                       = 408,
+	http_status_conflict                             = 409,
+	http_status_gone                                 = 410,
+	http_status_lengthrequired                       = 411,
+	http_status_preconditionfailed                   = 412,
+	http_status_requestentitytoolarge                = 413,
+	http_status_requesturitoolong                    = 414,
+	http_status_unsupportedmediatype                 = 415,
+	http_status_requestedrangenotsatisfiable         = 416,
+	http_status_expectationfailed                    = 417,
+	http_status_teapot                               = 418,
+	http_status_misdirectedrequest                   = 421,
+	http_status_unprocessableentity                  = 422,
+	http_status_locked                               = 423,
+	http_status_faileddependency                     = 424,
+	http_status_tooearly                             = 425,
+	http_status_upgraderequired                      = 426,
+	http_status_preconditionrequired                 = 428,
+	http_status_toomanyrequests                      = 429,
+	http_status_requestheaderfieldstoolarge          = 431,
+	http_status_unavailableforlegalreasons           = 451,
+	http_status_internalservererror                  = 500,
+	http_status_notimplemented                       = 501,
+	http_status_badgateway                           = 502,
+	http_status_serviceunavailable                   = 503,
+	http_status_gatewaytimeout                       = 504,
+	http_status_httpversionnotsupported              = 505,
+	http_status_variantalsonegotiates                = 506,
+	http_status_insufficientstorage                  = 507,
+	http_status_loopdetected                         = 508,
+	http_status_notextended                          = 510,
+	http_status_networkauthenticationrequired        = 511,
+  http_status_status_unset,
+};
+
+enum http_method as_http_method(const char *method);
+bool http_method_is(enum http_method wanted, const char *method);
+bool http_path_is(const char *desired_path, const char *received_path, size_t received_pathlen);
+
+#endif // http_helpers_h
