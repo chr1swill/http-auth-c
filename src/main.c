@@ -24,7 +24,7 @@
 // run out of space by 3 which is not ideal
 #define PHP_HASHIDX(connfd, sockfd) (((connfd) - (sockfd)) - 1)
 #define client_idx() PHP_HASHIDX(connfd, sockfd)
-#define PHP_NUM_HEADERS  8
+#define PHP_NUM_HEADERS 32 
 
 #define err_exit(msg) \
 do { perror((msg)); exit(EXIT_FAILURE); } while(0); \
@@ -375,6 +375,11 @@ int main()
             php_prevbuflen[client_idx()] = php_buflen[client_idx()];
             php_buflen[client_idx()] += n;
 
+            //printf("before phr_parse_request -> php_buflen[client_idx()] = %zu\n",
+            //    php_buflen[client_idx()]);
+            //printf("before phr_parse_request -> php_prevbuflen[client_idx()] = %zu\n",
+            //    php_prevbuflen[client_idx()]);
+
             /* returns number of bytes consumed if successful, -2 if request is partial,
              * -1 if failed */
             n = phr_parse_request(php_buf[client_idx()], php_buflen[client_idx()],
@@ -385,6 +390,11 @@ int main()
                 php_prevbuflen[client_idx()]);
             if (n > 0) {
               puts("php_parse_request: success\n\n");
+              //printf("after phr_parse_request -> php_buflen[client_idx()] = %zu\n",
+              //    php_buflen[client_idx()]);
+              //printf("after phr_parse_request -> php_prevbuflen[client_idx()] = %zu\n",
+              //    php_prevbuflen[client_idx()]);
+              php_buflen[client_idx()] = 0;
             } else if (n == -1) {
               err_exit("phr_parse_request: failed, ignore the ->");
             } else {
