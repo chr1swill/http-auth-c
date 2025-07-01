@@ -342,9 +342,7 @@ int main()
             }
 
             if ((fcntl(connfd, F_SETFL, O_NONBLOCK)) == -1)
-            {
               err_exit("fcntl: O_NONBLOCK");
-            }
             
             if ((pollfd_add(&nfds, pfds, connfd, POLLIN)) == -1)
             {
@@ -375,11 +373,6 @@ int main()
             php_prevbuflen[client_idx()] = php_buflen[client_idx()];
             php_buflen[client_idx()] += n;
 
-            //printf("before phr_parse_request -> php_buflen[client_idx()] = %zu\n",
-            //    php_buflen[client_idx()]);
-            //printf("before phr_parse_request -> php_prevbuflen[client_idx()] = %zu\n",
-            //    php_prevbuflen[client_idx()]);
-
             /* returns number of bytes consumed if successful, -2 if request is partial,
              * -1 if failed */
             n = phr_parse_request(php_buf[client_idx()], php_buflen[client_idx()],
@@ -389,18 +382,11 @@ int main()
                 php_headers[client_idx()], &php_num_headers[client_idx()],
                 php_prevbuflen[client_idx()]);
             if (n > 0) {
-              puts("php_parse_request: success\n\n");
-              //printf("after phr_parse_request -> php_buflen[client_idx()] = %zu\n",
-              //    php_buflen[client_idx()]);
-              //printf("after phr_parse_request -> php_prevbuflen[client_idx()] = %zu\n",
-              //    php_prevbuflen[client_idx()]);
               php_buflen[client_idx()] = 0;
             } else if (n == -1) {
               err_exit("phr_parse_request: failed, ignore the ->");
             } else {
               assert(n == -2);
-              puts("php_parse_request: partial");
-
               if (php_buflen[client_idx()] == sizeof(php_buf[client_idx()]))
                 err_exit("php_parse_request: request_to_long");
 
