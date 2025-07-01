@@ -267,8 +267,6 @@ int main()
       if (pfds[i].revents == 0) continue;
       --ready;
 
-      // TODO: add the rest or the events
-      // that could be in revents (POLLHUP, etc...)
       switch ((pfds[i].revents & (POLLIN | POLLOUT | POLLERR | POLLHUP | POLLNVAL)))
       {
         case POLLIN:
