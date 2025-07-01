@@ -389,11 +389,16 @@ int main()
         close_and_clear_pfd(&pfds[i]);
 
         break;
-        case POLLERR: printf("POLLERR\n"); 
+        case POLLERR:
+        printf("POLLERR fired on pfds[%zu].fd=%d closing it.\n", i, pfds[i].fd);
+        close_and_clear_pfd(&pfds[i]);
         break;
-        case POLLHUP: printf("POLLHUP\n"); 
+        case POLLHUP:
+        printf("POLLHUP fired on pfds[%zu].fd=%d closing it.\n", i, pfds[i].fd);
+        close_and_clear_pfd(&pfds[i]);
         break;
-        case POLLNVAL: printf("POLLNVAL\n"); 
+        printf("POLLHUP fired on pfds[%zu].fd=%d closing it.\n", i, pfds[i].fd);
+        close_and_clear_pfd(&pfds[i]);
         break;
         default:
         printf("something is messed but brother, pfds[%ld].revents=%d\n",
@@ -417,7 +422,10 @@ int main()
         printf("has POLLERR=%s\n", (pfds[i].revents & POLLERR) == POLLERR ? "true" : "false");
         printf("has POLLHUP=%s\n", (pfds[i].revents & POLLHUP) == POLLHUP ? "true" : "false");
         printf("has POLLNVAL=%s\n", (pfds[i].revents & POLLNVAL) == POLLNVAL ? "true" : "false");
-        return(1);
+
+        printf("closing and clearing fd from pfds array\n");
+        close_and_clear_pfd(&pfds[i]);
+        break;
       }
     }
   }
