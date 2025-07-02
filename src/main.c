@@ -11,6 +11,7 @@
 #include <assert.h>
 #include "picohttpparser.h"
 #include "http_helpers.h"
+#include "login.h"
 
 #define PORT "8080"
 #define BACKLOG 10
@@ -404,10 +405,24 @@ int main()
               continue;
             }
 
+            if (http_path_is("/login",
+                  php_path[client_idx()],
+                  php_pathlen[client_idx()]))
+            {
+              client_status_code[client_idx()] = http_status_ok;
+              php_content[client_idx()] = (char *)html_login_html;
+              php_contentlen[client_idx()] = (size_t)html_login_html_len;
+              php_content_type[client_idx()] = "text/html";
+
+              pfds[i].events = POLLOUT;
+              pfds[i].revents = -1;
+              continue;
+            }
+
             if (http_path_is("/",
                   php_path[client_idx()],
-                  php_pathlen[client_idx()])) {
-
+                  php_pathlen[client_idx()]))
+            {
               client_status_code[client_idx()] = http_status_ok;
               php_content[client_idx()] =
                 http_status_to_str[client_status_code[client_idx()]];

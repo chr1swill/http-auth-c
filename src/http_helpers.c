@@ -33,5 +33,6 @@ bool http_method_is(enum http_method wanted, const char *method)
 
 bool http_path_is(const char *desired_path, const char *received_path, size_t received_pathlen)
 {
-  return (memcmp(desired_path, received_path, received_pathlen) == 0);
+  return ((strlen(desired_path) == received_pathlen) &&
+      memcmp(desired_path, received_path, received_pathlen) == 0);
 }
