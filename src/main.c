@@ -29,18 +29,20 @@
 #define err_exit(msg) \
 do { perror((msg)); exit(EXIT_FAILURE); } while(0); \
 
-static char         php_buf[PFDSMAX][REQUESTBUFFERMAX]               = {0};
-static size_t       php_buflen[PFDSMAX]                              = {0};
-static const char * php_method[PFDSMAX]                              = {0};
-static size_t       php_methodlen[PFDSMAX]                           = {0};
-static const char * php_path[PFDSMAX]                                = {0};
-static size_t       php_pathlen[PFDSMAX]                             = {0};
-static size_t       php_num_headers[PFDSMAX]                         = {PHP_NUM_HEADERS};
-static struct       phr_header php_headers[PFDSMAX][PHP_NUM_HEADERS] = {0};
-static int          php_minor_version[PFDSMAX]                       = {0};
-static size_t       php_prevbuflen[PFDSMAX]                          = {0};
-
-static enum http_status client_status_code[PFDSMAX] = {http_status_status_unset};
+static char             php_buf[PFDSMAX][REQUESTBUFFERMAX]               = {0};
+static size_t           php_buflen[PFDSMAX]                              = {0};
+static const char *     php_method[PFDSMAX]                              = {0};
+static size_t           php_methodlen[PFDSMAX]                           = {0};
+static const char *     php_path[PFDSMAX]                                = {0};
+static size_t           php_pathlen[PFDSMAX]                             = {0};
+static size_t           php_num_headers[PFDSMAX]                         = {PHP_NUM_HEADERS};
+static struct           phr_header php_headers[PFDSMAX][PHP_NUM_HEADERS] = {0};
+static int              php_minor_version[PFDSMAX]                       = {0};
+static size_t           php_prevbuflen[PFDSMAX]                          = {0};
+static const char *     php_content_type[PFDSMAX]                        = {0};
+static const char *     php_content[PFDSMAX]                             = {0};
+static size_t           php_contentlen[PFDSMAX]                          = {0};
+static enum http_status client_status_code[PFDSMAX]                      = {http_status_status_unset};
 
 static const char *http_status_to_str[] = {
 	[http_status_continue] = "Continue",
@@ -220,7 +222,7 @@ void close_and_clear_pfd(struct pollfd *pfds)
 static inline
 int http_response_format_write(int connfd,
     int minor_version, enum http_status status,
-    char *content_type, const char *content, size_t contentlen)
+    const char *content_type, const char *content, size_t contentlen)
 {
   return dprintf(connfd,
       "HTTP/1.%d %d\r\n" 
@@ -405,13 +407,26 @@ int main()
             if (http_path_is("/",
                   php_path[client_idx()],
                   php_pathlen[client_idx()])) {
+
               client_status_code[client_idx()] = http_status_ok;
+              php_content[client_idx()] =
+                http_status_to_str[client_status_code[client_idx()]];
+              php_contentlen[client_idx()] =
+                strlen(http_status_to_str[client_status_code[client_idx()]]);
+              php_content_type[client_idx()] = "text/plain";
+
               pfds[i].events = POLLOUT;
               pfds[i].revents = -1;
               continue;
             }
 
             client_status_code[client_idx()] = http_status_notfound;
+            php_content[client_idx()] =
+              http_status_to_str[client_status_code[client_idx()]];
+            php_contentlen[client_idx()] =
+              strlen(http_status_to_str[client_status_code[client_idx()]]);
+            php_content_type[client_idx()] = "text/plain";
+
             pfds[i].events = POLLOUT;
             pfds[i].revents = -1;
             continue;
@@ -420,12 +435,13 @@ int main()
         case POLLOUT: 
         printf("fd %d fired POLLOUT event\n", pfds[i].fd);
 
+
         if (http_response_format_write(pfds[i].fd,
               php_minor_version[client_idx()],
               client_status_code[client_idx()],
-              "text/plain",
-              http_status_to_str[client_status_code[client_idx()]],
-              strlen(http_status_to_str[client_status_code[client_idx()]])) <= 0) {
+              php_content_type[client_idx()],
+              php_content[client_idx()],
+              php_contentlen[client_idx()]) <= 0) {
           err_exit("http_response_format_write: dprintf");
         }
 
