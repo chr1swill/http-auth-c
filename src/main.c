@@ -11,7 +11,8 @@
 #include <assert.h>
 #include "picohttpparser.h"
 #include "http_helpers.h"
-#include "login.h"
+#include "login.html.h"
+#include "index.html.h"
 
 #define PORT "8080"
 #define BACKLOG 10
@@ -25,7 +26,7 @@
 // run out of space by 3 which is not ideal
 #define PHP_HASHIDX(connfd, sockfd) (((connfd) - (sockfd)) - 1)
 #define client_idx() PHP_HASHIDX(connfd, sockfd)
-#define PHP_NUM_HEADERS 32 
+#define PHP_NUM_HEADERS 64 
 
 #define err_exit(msg) \
 do { perror((msg)); exit(EXIT_FAILURE); } while(0); \
@@ -373,6 +374,9 @@ int main()
               }
             }
 
+            printf("incoming request:\n%s\n", php_buf[client_idx()]);
+
+            php_num_headers[client_idx()] = PHP_NUM_HEADERS;
             php_prevbuflen[client_idx()] = php_buflen[client_idx()];
             php_buflen[client_idx()] += n;
 
@@ -385,6 +389,9 @@ int main()
                 php_headers[client_idx()], &php_num_headers[client_idx()],
                 php_prevbuflen[client_idx()]);
             if (n > 0) {
+              printf("phr_parse_requset: success, handling parsed request\n");
+              printf("num_heaers=%zu\n\n", php_num_headers[client_idx()]);
+
               php_buflen[client_idx()] = 0;
             } else if (n == -1) {
               err_exit("phr_parse_request: failed, ignore the ->");
@@ -424,11 +431,9 @@ int main()
                   php_pathlen[client_idx()]))
             {
               client_status_code[client_idx()] = http_status_ok;
-              php_content[client_idx()] =
-                http_status_to_str[client_status_code[client_idx()]];
-              php_contentlen[client_idx()] =
-                strlen(http_status_to_str[client_status_code[client_idx()]]);
-              php_content_type[client_idx()] = "text/plain";
+              php_content[client_idx()] =(char *)html_index_html;
+              php_contentlen[client_idx()] = (size_t)html_index_html_len;
+              php_content_type[client_idx()] = "text/html";
 
               pfds[i].events = POLLOUT;
               pfds[i].revents = -1;

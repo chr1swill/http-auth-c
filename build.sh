@@ -2,6 +2,7 @@
 
 set -xe
 
+HTML=html
 SRC=src
 BIN=bin
 CFLAGS="-Wall -Wextra -pedantic -ggdb"
@@ -17,6 +18,13 @@ then
 fi
 
 mkdir -p "$BIN"
+
+for file in $(ls "$HTML");
+do
+  case "$file" in
+    *.html) xxd -i ${HTML}/${file} > ${SRC}/${file}.h 
+  esac
+done
 
 gcc -o ${BIN}/main ${SRC}/main.c ${SRC}/picohttpparser.c ${SRC}/http_helpers.c ${CFLAGS}
 
