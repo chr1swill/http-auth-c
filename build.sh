@@ -22,15 +22,12 @@ mkdir -p "$BIN"
 for file in $(ls "$HTML");
 do
   case "$file" in
-    *.html) xxd -i ${HTML}/${file} > ${SRC}/${file}.h 
+    *.html) xxd -i ${HTML}/${file} > ${SRC}/${file}.h &
   esac
 done
 
-gcc -o ${BIN}/main ${SRC}/main.c ${SRC}/picohttpparser.c ${SRC}/http_helpers.c ${CFLAGS}
+wait # making headers form html files
 
-# only works on a single file
-# CFLAGS="-fverbose-asm -S"
-# gcc -o ${BIN}/main.s ${SRC}/main.c ${SRC}/picohttpparser.c ${CFLAGS}
-# gcc ${SRC}/main.c ${SRC}/picohttpparser.c ${CFLAGS}
+gcc -o ${BIN}/main ${SRC}/main.c ${SRC}/picohttpparser.c ${SRC}/http_helpers.c ${CFLAGS}
 
 exit 0
