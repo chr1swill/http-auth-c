@@ -374,8 +374,6 @@ int main()
               }
             }
 
-            printf("incoming request:\n%s\n", php_buf[client_idx()]);
-
             php_num_headers[client_idx()] = PHP_NUM_HEADERS;
             php_prevbuflen[client_idx()] = php_buflen[client_idx()];
             php_buflen[client_idx()] += n;
@@ -389,9 +387,6 @@ int main()
                 php_headers[client_idx()], &php_num_headers[client_idx()],
                 php_prevbuflen[client_idx()]);
             if (n > 0) {
-              printf("phr_parse_requset: success, handling parsed request\n");
-              printf("num_heaers=%zu\n\n", php_num_headers[client_idx()]);
-
               php_buflen[client_idx()] = 0;
             } else if (n == -1) {
               err_exit("phr_parse_request: failed, ignore the ->");
