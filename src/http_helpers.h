@@ -85,6 +85,7 @@ enum http_status {
 
 enum http_method as_http_method(const char *method);
 bool http_method_is(enum http_method wanted, const char *method);
-bool http_path_is(const char *desired_path, const char *received_path, size_t received_pathlen);
+// desired_path must be null terminated
+bool http_path_is(const char *desired_path, const char *received_path);
 
 #endif // http_helpers_h
