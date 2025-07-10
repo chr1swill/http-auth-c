@@ -25,7 +25,7 @@ static inline
 void check_protocol(const unsigned char *url, size_t len, enum url_protocol *protocol);
 
 /**
- * @return -1 in case of error or 0 if success 
+ * @return -1 in case of error or 0 if success
  */
 static inline
 int consume_query_param(struct url_query_param *query_param,
@@ -41,12 +41,21 @@ int consume_query_param(struct url_query_param *query_param,
  * @param n_query_params - the number of filled query params in array
  * @param query_params_max - the capacity of the query params array
  *
- * @return -1 means error 0 means success 
+ * @return -1 means error 0 means success
  */
 static inline
+int internal__parse_query_params(const unsigned char *url, size_t urllen,
+    struct url_query_param query_params[], size_t *n_query_params,
+    const size_t query_params_max);
+
+/**
+ * @return -1 means error 0 means success 
+ */
+static inline 
 int parse_query_params(const unsigned char *url, size_t urllen,
     struct url_query_param query_params[], size_t *n_query_params,
     const size_t query_params_max);
+
 
 #ifdef URLPARAMPARSER_IMPLEMENTATION
 
@@ -162,12 +171,12 @@ found_end_quote:
 }
 
 static inline
-int parse_query_params(
+int internal__parse_query_params(
     const unsigned char *url,
     size_t urllen,
     struct url_query_param query_params[],
     size_t *n_query_params,
-    const size_t query_params_max) 
+    const size_t query_params_max)
 {
   assert(urllen > 0);
   assert(query_params_max > 0);
@@ -196,6 +205,25 @@ int parse_query_params(
 
   return 0;
 }
+
+static inline
+int parse_query_params(
+    const unsigned char *url,
+    size_t urllen,
+    struct url_query_param query_params[],
+    size_t *n_query_params,
+    const size_t query_params_max)
+{
+  enum url_protocol p;
+
+  check_protocol(url, urllen, &p);
+  if (url_protocol_unknown)
+    return -1;
+  else
+    return internal__parse_query_params(&url[p], urllen -  p,
+        query_params, n_query_params, query_params_max);
+}
+
 
 #endif // URLPARAMPARSER_IMPLEMENTATION
 
