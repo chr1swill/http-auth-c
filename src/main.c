@@ -13,6 +13,8 @@
 #include "http_helpers.h"
 #include "login.html.h"
 #include "index.html.h"
+#define URL_IMPLEMENTATION
+#include "urlparamparser.h"
 
 #define PORT "8080"
 #define BACKLOG 10
@@ -407,9 +409,31 @@ int main()
               continue;
             }
 
+            // if (http_path_is("/login_sumbit",
+            //       php_path[client_idx()]))
+            // {
+            //   //client_status_code[client_idx()] = http_status_ok;
+            //   //php_content[client_idx()] = (char *)html_login_html;
+            //   //php_contentlen[client_idx()] = (size_t)html_login_html_len;
+            //   //php_content_type[client_idx()] = "text/html";
+            //   //
+
+            //   // TODO:
+            //   // check url query params
+            //   // handle url query params
+            //   // check credentials are valid
+            //   // if (they are) 
+            //   //      redirect to protect page 
+            //   // else
+            //   //      response with something about being unauthorized
+
+            //   pfds[i].events = POLLOUT;
+            //   pfds[i].revents = -1;
+            //   continue;
+            // }
+
             if (http_path_is("/login",
-                  php_path[client_idx()],
-                  php_pathlen[client_idx()]))
+                  php_path[client_idx()]))
             {
               client_status_code[client_idx()] = http_status_ok;
               php_content[client_idx()] = (char *)html_login_html;
@@ -422,8 +446,7 @@ int main()
             }
 
             if (http_path_is("/",
-                  php_path[client_idx()],
-                  php_pathlen[client_idx()]))
+                  php_path[client_idx()]))
             {
               client_status_code[client_idx()] = http_status_ok;
               php_content[client_idx()] =(char *)html_index_html;
