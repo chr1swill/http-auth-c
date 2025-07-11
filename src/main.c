@@ -13,7 +13,7 @@
 #include "http_helpers.h"
 #include "login.html.h"
 #include "index.html.h"
-#define URL_IMPLEMENTATION
+#define URLPARAMPARSER_IMPLEMENTATION
 #include "urlparamparser.h"
 
 #define PORT "8080"
@@ -29,6 +29,7 @@
 #define PHP_HASHIDX(connfd, sockfd) (((connfd) - (sockfd)) - 1)
 #define client_idx() PHP_HASHIDX(connfd, sockfd)
 #define PHP_NUM_HEADERS 64 
+#define QUERY_PARAM_MAX 4
 
 #define err_exit(msg) \
 do { perror((msg)); exit(EXIT_FAILURE); } while(0); \
@@ -409,28 +410,54 @@ int main()
               continue;
             }
 
-            // if (http_path_is("/login_sumbit",
-            //       php_path[client_idx()]))
-            // {
-            //   //client_status_code[client_idx()] = http_status_ok;
-            //   //php_content[client_idx()] = (char *)html_login_html;
-            //   //php_contentlen[client_idx()] = (size_t)html_login_html_len;
-            //   //php_content_type[client_idx()] = "text/html";
-            //   //
+            if (http_path_is("/login_submit",
+                  php_path[client_idx()]))
+            {
+              //client_status_code[client_idx()] = http_status_ok;
+              //php_content[client_idx()] = (char *)html_login_html;
+              //php_contentlen[client_idx()] = (size_t)html_login_html_len;
+              //php_content_type[client_idx()] = "text/html";
+              size_t n_query_params;
+              struct url_query_param query_params[QUERY_PARAM_MAX] = {0};
 
-            //   // TODO:
-            //   // check url query params
-            //   // handle url query params
-            //   // check credentials are valid
-            //   // if (they are) 
-            //   //      redirect to protect page 
-            //   // else
-            //   //      response with something about being unauthorized
+              n_query_params = 0;
+              if (parse_query_params(
+                    (const unsigned char *)php_path[client_idx()],
+                    php_pathlen[client_idx()],
+                    query_params, &n_query_params,
+                    QUERY_PARAM_MAX) == -1)
+                goto error_not_found;
 
-            //   pfds[i].events = POLLOUT;
-            //   pfds[i].revents = -1;
-            //   continue;
-            // }
+              {
+                for (size_t z = 0; z < n_query_params; ++z) {
+                  write(STDOUT_FILENO,
+                      query_params[z].key, query_params[z].keylen);
+                  putchar('\n');
+                  fflush(stdout);
+                  write(STDOUT_FILENO,
+                      query_params[z].value, query_params[z].valuelen);
+                  putchar('\n');
+                  fflush(stdout);
+                }
+              }
+
+              printf("end\n");
+              fflush(stdout);
+              return 0;
+
+              // TODO:
+              // check url query params
+              // handle url query params
+              // check credentials are valid
+              // if (they are) 
+              //      redirect to protect page 
+              // else
+              //      response with something about being unauthorized
+
+              pfds[i].events = POLLOUT;
+              pfds[i].revents = -1;
+              continue;
+            }
 
             if (http_path_is("/login",
                   php_path[client_idx()]))
@@ -458,6 +485,7 @@ int main()
               continue;
             }
 
+error_not_found:
             client_status_code[client_idx()] = http_status_notfound;
             php_content[client_idx()] =
               http_status_to_str[client_status_code[client_idx()]];
