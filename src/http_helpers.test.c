@@ -20,23 +20,34 @@ int main(void)
 
   cur = paths[i];
   res = http_path_is("/", cur);
-  assert(res);
+  assert( res );
+
+  res = http_path_is("/doggy/", cur);
+  assert( !res );
   ++i;
 
   cur = paths[i];
   res = http_path_is("/login", cur);
-  assert(res);
+  assert( res );
+
+  res = http_path_is("/looogin", cur);
+  assert( !res );
   ++i;
 
   cur = paths[i];
   res = http_path_is("/signup", cur);
-  assert(res);
+  assert( res );
+
+  res = http_path_is("/seenoohp", cur);
+  assert( !res );
   ++i;
 
   cur = paths[i];
-  res = http_path_is("/login/?username=what-the-helly&password=ontay", cur);
-  assert(res);
-  ++i;
+  res = http_path_is("/login/", cur);
+  assert( res );
+
+  res = http_path_is("/whatupsbrother", cur);
+  assert( !res );
 
   return 0;
 }
