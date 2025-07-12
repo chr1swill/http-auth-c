@@ -3,6 +3,8 @@
 
 #ifdef URLPARAMPARSER_IMPLEMENTATION
 #include <ctype.h>
+#include <string.h>
+#include <stddef.h>
 #endif // URLPARAMPARSER_IMPLEMENTATION
 
 enum url_protocol {
@@ -60,6 +62,12 @@ int parse_query_params(const unsigned char *url, size_t urllen,
     struct url_query_param query_params[], size_t *n_query_params,
     const size_t query_params_max);
 
+/**
+ * @return the index of the found key or -1 if not found
+ */
+static inline
+ssize_t url_query_param_get_value(struct url_query_param qp[], size_t qplen,
+    const unsigned char *key, size_t keylen);
 
 #ifdef URLPARAMPARSER_IMPLEMENTATION
 
@@ -226,6 +234,22 @@ int parse_query_params(
   else
     return internal__parse_query_params(&url[p], urllen -  p,
         query_params, n_query_params, query_params_max);
+}
+
+static inline
+ssize_t url_query_param_get_value(struct url_query_param qp[], size_t qplen,
+    const unsigned char *key, size_t keylen)
+{
+  assert(qplen != (size_t)(0 - 1));
+  do {
+    --qplen;
+    if (memcmp(qp[qplen].key, key, keylen)) // everything but 0 is true, thanks ken
+      continue;
+    else
+      return qplen;
+  } while (qplen != (size_t)(0 - 1));
+
+  return -1;
 }
 
 #endif // URLPARAMPARSER_IMPLEMENTATION
