@@ -58,10 +58,14 @@ for file in $(ls "$HTML");
 do
   case "$file" in
     *.html) 
-      html_file_is_newer=$(html_newer_than_header "${HTML}/${file}" "${SRC}/${file}.h")
-      echo "$html_file_is_newer"
-      if [ "$html_file_is_newer" -eq "1" ];
+      if [ -f "${SRC}/${file}.h" ];
       then
+        html_file_is_newer=$(html_newer_than_header "${HTML}/${file}" "${SRC}/${file}.h")
+        if [ "$html_file_is_newer" -eq "1" ];
+        then
+          xxd -i ${HTML}/${file} > ${SRC}/${file}.h &
+        fi
+      else
         xxd -i ${HTML}/${file} > ${SRC}/${file}.h &
       fi
   esac
