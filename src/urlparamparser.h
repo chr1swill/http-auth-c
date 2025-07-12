@@ -67,7 +67,7 @@ int parse_query_params(const unsigned char *url, size_t urllen,
  */
 static inline
 ssize_t url_query_param_get_value(struct url_query_param qp[], size_t qplen,
-    const unsigned char *key, size_t keylen);
+    const char *key, size_t keylen);
 
 #ifdef URLPARAMPARSER_IMPLEMENTATION
 
@@ -237,16 +237,31 @@ int parse_query_params(
 }
 
 static inline
-ssize_t url_query_param_get_value(struct url_query_param qp[], size_t qplen,
-    const unsigned char *key, size_t keylen)
+ssize_t url_query_param_get_value(
+    struct url_query_param qp[],
+    size_t qplen,
+    const char *key,
+    size_t keylen)
 {
   assert(qplen != (size_t)(0 - 1));
+  assert(qp != NULL);
+  assert(key != NULL);
+  assert(keylen > 0);
   do {
     --qplen;
-    if (memcmp(qp[qplen].key, key, keylen)) // everything but 0 is true, thanks ken
+    //printf("%p:%zu:%.*s\n", qp, qplen, (int)keylen, qp[qplen]->key);
+    fflush(stdout);
+    if (memcmp(qp[qplen].key, key, keylen)) {
+      printf("here3\n");
+      fflush(stdout);
       continue;
+    }
     else
+    {
+      printf("here3\n");
+      fflush(stdout);
       return qplen;
+    }
   } while (qplen != (size_t)(0 - 1));
 
   return -1;
