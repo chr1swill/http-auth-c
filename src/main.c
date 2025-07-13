@@ -152,13 +152,14 @@ int pollfd_add(nfds_t *nfds, struct pollfd *pfds, int connfd, int events)
 }
 
 static inline
-void close_and_clear_pfd(struct pollfd *pfds)
+void pollfd_close_and_clear(struct pollfd *pfds, nfds_t *nfds)
 {
   while(close(pfds->fd) == -1 && errno == EINTR);
 
   pfds->fd = -1;
   pfds->events = -1;
   pfds->revents = -1;
+  --(*nfds);
 }
 
 int main()
@@ -213,56 +214,12 @@ int main()
                   pfds[i].events = POLLIN;
                   pfds[i].revents = -1;
                   continue;
-                case EBADF: 
-                  assert(1 == 0 &&
-                      "accept EBADF should never happend: unreachable"); 
-                  break;
                 case ECONNABORTED:
-                  perror("accept");
+                  perror("accept: closing conntection");
+                  pollfd_close_and_clear(&pfds[i], &nfds);
                   continue;
-                case EFAULT:
-                  assert(1 == 0 &&
-                      "accept EFAULT should never happend: unreachable");
-                  break;
-                case EINTR:
-                  assert(1 == 0 &&
-                      "accept EINTR should never happend: unreachable");
-                  break;
-                case EINVAL:
-                  assert(1 == 0 &&
-                      "accept EINVAL should never happend: unreachable");
-                  break;
-                case EMFILE:
-                  err_exit("accept errno == EMFILE");
-                  break;
-                case ENFILE:
-                  err_exit("accept errno == EMFILE");
-                  break;
-                case ENOBUFS:
-                case ENOMEM:
-                  err_exit("accept errno == ENOBUFS || errno == ENOMEM");
-                  break;
-                case ENOTSOCK:
-                  assert(1 == 0 &&
-                      "accept ENOTSOCK should never happend: unreachable");
-                  break;
-                case EOPNOTSUPP:
-                  assert(1 == 0 &&
-                      "accept EOPNOTSUPP should never happend: unreachable");
-                  break;
-                case EPERM:
-                  err_exit("accept: issue with your fire wall setup");
-                  break;
-                case EPROTO:
-                case ENOSR:
-                case ESOCKTNOSUPPORT:
-                case ERESTART:
-                case ETIMEDOUT:
-                case EPROTONOSUPPORT:
-                  err_exit("accept: some sort of protocol or network error occured");
-                  break;
                 default:
-                  err_exit("accept: an unknow error occured");
+                  err_exit("accept");
                   break;
               }
             }
@@ -432,19 +389,19 @@ error_not_found:
           err_exit("http_response_format_write: dprintf");
         }
 
-        close_and_clear_pfd(&pfds[i]);
+        pollfd_close_and_clear(&pfds[i], &nfds);
 
         break;
         case POLLERR:
         printf("POLLERR fired on pfds[%zu].fd=%d closing it.\n", i, pfds[i].fd);
-        close_and_clear_pfd(&pfds[i]);
+        pollfd_close_and_clear(&pfds[i], &nfds);
         break;
         case POLLHUP:
         printf("POLLHUP fired on pfds[%zu].fd=%d closing it.\n", i, pfds[i].fd);
-        close_and_clear_pfd(&pfds[i]);
+        pollfd_close_and_clear(&pfds[i], &nfds);
         break;
         printf("POLLHUP fired on pfds[%zu].fd=%d closing it.\n", i, pfds[i].fd);
-        close_and_clear_pfd(&pfds[i]);
+        pollfd_close_and_clear(&pfds[i], &nfds);
         break;
         default:
         printf("something is messed but brother, pfds[%ld].revents=%d\n",
@@ -470,7 +427,7 @@ error_not_found:
         printf("has POLLNVAL=%s\n", (pfds[i].revents & POLLNVAL) == POLLNVAL ? "true" : "false");
 
         printf("closing and clearing fd from pfds array\n");
-        close_and_clear_pfd(&pfds[i]);
+        pollfd_close_and_clear(&pfds[i], &nfds);
         break;
       }
     }
