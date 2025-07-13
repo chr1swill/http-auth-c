@@ -393,38 +393,55 @@ error_not_found:
 
         break;
         case POLLERR:
-        printf("POLLERR fired on pfds[%zu].fd=%d closing it.\n", i, pfds[i].fd);
+        printf("POLLERR fired on pfds[%zu].fd=%d closing it.\n",
+            i, pfds[i].fd);
         pollfd_close_and_clear(&pfds[i], &nfds);
         break;
         case POLLHUP:
-        printf("POLLHUP fired on pfds[%zu].fd=%d closing it.\n", i, pfds[i].fd);
+        printf("POLLHUP fired on pfds[%zu].fd=%d closing it.\n",
+            i, pfds[i].fd);
         pollfd_close_and_clear(&pfds[i], &nfds);
         break;
-        printf("POLLHUP fired on pfds[%zu].fd=%d closing it.\n", i, pfds[i].fd);
+        printf("POLLHUP fired on pfds[%zu].fd=%d closing it.\n",
+            i, pfds[i].fd);
         pollfd_close_and_clear(&pfds[i], &nfds);
         break;
         default:
         printf("something is messed but brother, pfds[%ld].revents=%d\n",
             i, pfds[i].revents); 
         
-        printf("has POLLIN=%s\n", (pfds[i].revents & POLLIN) == POLLIN ? "true" : "false");
-        printf("has POLLPRI=%s\n", (pfds[i].revents & POLLPRI) == POLLPRI ? "true" : "false");
-        printf("has POLLOUT=%s\n", (pfds[i].revents & POLLOUT) == POLLOUT ? "true" : "false");
+        printf("has POLLIN=%s\n",
+            (pfds[i].revents & POLLIN) == POLLIN ? "true" : "false");
+        printf("has POLLPRI=%s\n",
+            (pfds[i].revents & POLLPRI) == POLLPRI ? "true" : "false");
+        printf("has POLLOUT=%s\n",
+            (pfds[i].revents & POLLOUT) == POLLOUT ? "true" : "false");
 #if defined __USE_XOPEN || defined __USE_XOPEN2K8
-        printf("has POLLRDNORM=%s\n", (pfds[i].revents & POLLRDNORM) == POLLRDNORM ? "true" : "false");
-        printf("has POLLRDBAND=%s\n", (pfds[i].revents & POLLRDBAND) == POLLRDBAND ? "true" : "false");
-        printf("has POLLWRNORM=%s\n", (pfds[i].revents & POLLWRNORM) == POLLWRNORM ? "true" : "false");
-        printf("has POLLWRBAND=%s\n", (pfds[i].revents & POLLWRBAND) == POLLWRBAND ? "true" : "false");
-        printf("has POLLWRNORM=%s\n", (pfds[i].revents & POLLWRNORM) == POLLWRNORM ? "true" : "false");
+        printf("has POLLRDNORM=%s\n",
+            (pfds[i].revents & POLLRDNORM) == POLLRDNORM ? "true" : "false");
+        printf("has POLLRDBAND=%s\n",
+            (pfds[i].revents & POLLRDBAND) == POLLRDBAND ? "true" : "false");
+        printf("has POLLWRNORM=%s\n",
+            (pfds[i].revents & POLLWRNORM) == POLLWRNORM ? "true" : "false");
+        printf("has POLLWRBAND=%s\n",
+            (pfds[i].revents & POLLWRBAND) == POLLWRBAND ? "true" : "false");
+        printf("has POLLWRNORM=%s\n",
+            (pfds[i].revents & POLLWRNORM) == POLLWRNORM ? "true" : "false");
 #endif
 #ifdef __USE_GNU
-        printf("has POLLMSG=%s\n", (pfds[i].revents & POLLMSG) == POLLMSG ? "true" : "false");
-        printf("has POLLREMOVE=%s\n", (pfds[i].revents & POLLREMOVE) == POLLREMOVE ? "true" : "false");
-        printf("has POLLRDHUP=%s\n", (pfds[i].revents & POLLRDHUP) == POLLRDHUP ? "true" : "false");
+        printf("has POLLMSG=%s\n",
+            (pfds[i].revents & POLLMSG) == POLLMSG ? "true" : "false");
+        printf("has POLLREMOVE=%s\n",
+            (pfds[i].revents & POLLREMOVE) == POLLREMOVE ? "true" : "false");
+        printf("has POLLRDHUP=%s\n",
+            (pfds[i].revents & POLLRDHUP) == POLLRDHUP ? "true" : "false");
 #endif
-        printf("has POLLERR=%s\n", (pfds[i].revents & POLLERR) == POLLERR ? "true" : "false");
-        printf("has POLLHUP=%s\n", (pfds[i].revents & POLLHUP) == POLLHUP ? "true" : "false");
-        printf("has POLLNVAL=%s\n", (pfds[i].revents & POLLNVAL) == POLLNVAL ? "true" : "false");
+        printf("has POLLERR=%s\n",
+            (pfds[i].revents & POLLERR) == POLLERR ? "true" : "false");
+        printf("has POLLHUP=%s\n",
+            (pfds[i].revents & POLLHUP) == POLLHUP ? "true" : "false");
+        printf("has POLLNVAL=%s\n",
+            (pfds[i].revents & POLLNVAL) == POLLNVAL ? "true" : "false");
 
         printf("closing and clearing fd from pfds array\n");
         pollfd_close_and_clear(&pfds[i], &nfds);
