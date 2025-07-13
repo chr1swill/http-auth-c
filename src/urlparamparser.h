@@ -66,7 +66,8 @@ int parse_query_params(const unsigned char *url, size_t urllen,
  * @return the index of the found key or -1 if not found
  */
 static inline
-ssize_t url_query_param_get_value(struct url_query_param qp[], size_t qplen,
+ssize_t url_query_param_get_value(
+    struct url_query_param [], size_t qplen,
     const char *key, size_t keylen);
 
 #ifdef URLPARAMPARSER_IMPLEMENTATION
