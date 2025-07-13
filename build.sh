@@ -2,7 +2,7 @@
 
 set -xe
 
-CC=tcc
+CC=gcc
 HTML=html
 SRC=src
 BIN=bin
