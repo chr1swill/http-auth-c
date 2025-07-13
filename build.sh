@@ -2,6 +2,7 @@
 
 set -xe
 
+CC=tcc
 HTML=html
 SRC=src
 BIN=bin
@@ -74,6 +75,6 @@ done
 # wait for all header to be build before compiling
 wait 
 
-gcc -o ${BIN}/main ${SRC}/main.c ${SRC}/picohttpparser.c ${CFLAGS}
+${CC} -o ${BIN}/main ${SRC}/main.c ${SRC}/picohttpparser.c ${CFLAGS}
 
 exit 0
