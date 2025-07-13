@@ -13,8 +13,6 @@
 #include "login.html.h"
 #include "index.html.h"
 #include "signup.html.h"
-#define HTTP_HELPERS_IMPLEMENTATION
-#include "http_helpers.h"
 #define URLPARAMPARSER_IMPLEMENTATION
 #include "urlparamparser.h"
 
@@ -22,12 +20,9 @@
 #define BACKLOG 10
 #define PFDSMAX 1024
 #define REQUESTBUFFERMAX 1024
-// since this for a server we know that we will never need a
-// request buffer for fd 0, 1, 2 (STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO)
-// so why not make a function that will translate the connfd to make
-// the first connfd (#3) fill spot number 0 or at least 1
-// JUST A THOUGHT cause if we really have PFDSMAX fds in our array we will
-// run out of space by 3 which is not ideal
+#define HTTP_HELPERS_IMPLEMENTATION
+#include "http_helpers.h"
+
 #define PHP_HASHIDX(connfd, sockfd) (((connfd) - (sockfd)) - 1)
 #define client_idx() PHP_HASHIDX(connfd, sockfd)
 #define PHP_NUM_HEADERS 64 
@@ -50,81 +45,6 @@ static const char *     php_content_type[PFDSMAX]                        = {0};
 static const char *     php_content[PFDSMAX]                             = {0};
 static size_t           php_contentlen[PFDSMAX]                          = {0};
 static enum http_status client_status_code[PFDSMAX]                      = {http_status_status_unset};
-
-static inline
-int get_non_blocking_listener()
-{
-  int rv, socketfd;
-  struct addrinfo hints, *result, *rp;
-
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_flags = AI_PASSIVE;
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_protocol = IPPROTO_TCP;
-  hints.ai_addr = NULL;
-  hints.ai_canonname = NULL;
-  hints.ai_next = NULL;
-
-  rv = getaddrinfo(NULL, PORT, &hints, &result);
-  if (rv != 0)
-  {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-    return(-1);
-  }
-
-  rp = result;
-  for (;rp != NULL; rp = rp->ai_next)
-  {
-    socketfd = socket(rp->ai_family , rp->ai_socktype, rp->ai_protocol);
-    if (socketfd == -1)
-    {
-      perror("socket");
-      continue;
-    }
-
-    if ((setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR,
-         &(int){1}, sizeof(int)) == -1))
-    {
-      perror("setsockopt");
-      close(socketfd);
-      continue;
-    }
-
-    if ((bind(socketfd, rp->ai_addr, rp->ai_addrlen)) == -1)
-    {
-      perror("bind");
-      close(socketfd);
-      continue;
-    }
-
-    if ((listen(socketfd, BACKLOG)) == -1)
-    {
-      perror("listen");
-      close(socketfd);
-      continue;
-    } 
-
-    break;
-  }
-
-  freeaddrinfo(result);
-
-  if (rp == NULL)
-  {
-    fprintf(stderr, "failed to create listener socket\n");
-    return(-1);
-  } 
-
-  if ((fcntl(socketfd, F_SETFL, O_NONBLOCK)) == -1)
-  {
-    perror("fcntl: O_NONBLOCK");
-    close(socketfd);
-    return(-1);
-  }
-
-  return socketfd;
-}
 
 static inline
 int pollfd_add(nfds_t *nfds, struct pollfd *pfds, int connfd, int events)
@@ -171,7 +91,7 @@ int main()
 
   memset(pfds, -1, sizeof(struct pollfd) * PFDSMAX);
 
-  sockfd = get_non_blocking_listener();
+  sockfd = http_get_non_blocking_listener();
   if (sockfd == -1)
   {
     fprintf(stderr, "get_listener_socket: failed to get socket\n");
