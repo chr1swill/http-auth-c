@@ -10,10 +10,11 @@
 #include <errno.h>
 #include <assert.h>
 #include "picohttpparser.h"
-#include "http_helpers.h"
 #include "login.html.h"
 #include "index.html.h"
 #include "signup.html.h"
+#define HTTP_HELPERS_IMPLEMENTATION
+#include "http_helpers.h"
 #define URLPARAMPARSER_IMPLEMENTATION
 #include "urlparamparser.h"
 
