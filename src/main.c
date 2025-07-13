@@ -161,24 +161,6 @@ void close_and_clear_pfd(struct pollfd *pfds)
   pfds->revents = -1;
 }
 
-static inline
-int http_response_format_write(int connfd,
-    int minor_version, enum http_status status,
-    const char *content_type, const char *content, size_t contentlen)
-{
-  return dprintf(connfd,
-      "HTTP/1.%d %d\r\n" 
-      "accept-ranges: bytes\r\n"
-      "content-type: %s\r\n" // example value => text/html; charset=utf-8
-      "content-length: %zu\r\n"
-      "\r\n"
-      "%.*s",
-      minor_version, status,
-      content_type,
-      contentlen,
-      (int)contentlen, content);
-}
-
 int main()
 {
   ssize_t n;

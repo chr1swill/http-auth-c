@@ -151,13 +151,21 @@ static const char *http_status_to_str[] = {
 	[http_status_networkauthenticationrequired] = "Network Authentication Required",
 };
 
+static inline
 enum http_method as_http_method(const char *method);
+static inline
 bool http_method_is(enum http_method wanted, const char *method);
 // desired_path must be null terminated
+static inline
 bool http_path_is(const char *desired_path, const char *received_path);
+static inline
+int http_response_format_write(int connfd,
+    int minor_version, enum http_status status,
+    const char *content_type, const char *content, size_t contentlen);
 
 #ifdef HTTP_HELPERS_IMPLEMENTATION
 
+static inline
 enum http_method as_http_method(const char *method)
 {
   if (memcmp(method, "GET", sizeof("GET") - 1) == 0) 
@@ -182,14 +190,34 @@ enum http_method as_http_method(const char *method)
     return http_method_invalid_method;
 }
 
+static inline
 bool http_method_is(enum http_method wanted, const char *method)
 {
   return (wanted == as_http_method(method));
 }
 
+static inline
 bool http_path_is(const char *desired_path, const char *received_path)
 {
   return (memcmp(desired_path, received_path, strlen(desired_path)) == 0);
+}
+
+static inline
+int http_response_format_write(int connfd,
+    int minor_version, enum http_status status,
+    const char *content_type, const char *content, size_t contentlen)
+{
+  return dprintf(connfd,
+      "HTTP/1.%d %d\r\n" 
+      "accept-ranges: bytes\r\n"
+      "content-type: %s\r\n" // example value => text/html; charset=utf-8
+      "content-length: %zu\r\n"
+      "\r\n"
+      "%.*s",
+      minor_version, status,
+      content_type,
+      contentlen,
+      (int)contentlen, content);
 }
 
 #endif // HTTP_HELPERS_IMPLEMENTATION
