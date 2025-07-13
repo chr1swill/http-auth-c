@@ -429,7 +429,7 @@ int main()
                     QUERY_PARAM_MAX) == -1)
                 goto error_not_found;
 
-              idx_or_not = url_query_param_get_value(query_params, QUERY_PARAM_MAX,
+              idx_or_not = url_query_param_get_value(query_params, n_query_params,
                   "username", (sizeof "username") - 1);
               // TODO: do something better here like  
               // reporting an error or 
@@ -440,7 +440,7 @@ int main()
               printf("username=%.*s\n", (int)username->valuelen, username->value);
               fflush(stdout);
 
-              idx_or_not = url_query_param_get_value(query_params, QUERY_PARAM_MAX,
+              idx_or_not = url_query_param_get_value(query_params, n_query_params,
                   "password", (sizeof "password") - 1);
               // TODO: do something better here like  
               // reporting an error or 
